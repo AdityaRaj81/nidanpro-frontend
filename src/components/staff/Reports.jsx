@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, Filter, Plus, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../api/axiosConfig';
+import Loader from '../common/Loader';
 
 export default function Reports() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -94,7 +95,7 @@ export default function Reports() {
         </div>
         
         {loading ? (
-          <div className="p-8 text-center text-text-secondary">Loading reports...</div>
+          <Loader message="Loading reports..." />
         ) : filteredReports.length === 0 ? (
           <div className="p-8 text-center">
             <FileText className="w-10 h-10 text-text-secondary mx-auto mb-3" />

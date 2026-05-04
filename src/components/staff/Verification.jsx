@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, XCircle, MessageSquare } from 'lucide-react';
 import api from '../../api/axiosConfig';
+import Loader from '../common/Loader';
 
 export default function Verification() {
   const { id } = useParams();
@@ -60,7 +61,7 @@ export default function Verification() {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-text-secondary">Loading verification details...</div>;
+    return <Loader message="Loading verification details..." />;
   }
 
   return (

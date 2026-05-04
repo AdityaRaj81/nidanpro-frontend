@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, FileText, Download, Eye, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axiosConfig';
+import Loader from '../common/Loader';
 
 export default function PatientReports() {
   const [reports, setReports] = useState([]);
@@ -49,11 +50,8 @@ export default function PatientReports() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-text-secondary">Loading reports...</p>
-        </div>
+      <div className="min-h-screen bg-background">
+        <Loader message="Loading reports..." />
       </div>
     );
   }

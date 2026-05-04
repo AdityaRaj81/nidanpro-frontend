@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, User, Calendar, FileText, CheckCircle } from 'lucide-react';
 import api from '../../api/axiosConfig';
+import Loader from '../common/Loader';
 
 export default function ReportView() {
   const { id } = useParams();
@@ -30,11 +31,8 @@ export default function ReportView() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-text-secondary">Loading report...</p>
-        </div>
+      <div className="min-h-screen bg-background">
+        <Loader message="Loading report..." />
       </div>
     );
   }

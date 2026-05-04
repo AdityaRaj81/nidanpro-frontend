@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, User, TestTube } from 'lucide-react';
 import api from '../../api/axiosConfig';
+import Loader from '../common/Loader';
 
 export default function CreateReport() {
   const navigate = useNavigate();
@@ -123,7 +124,7 @@ export default function CreateReport() {
 
           {/* Patient List */}
           {loading ? (
-            <div className="p-4 text-center">Loading patients...</div>
+            <Loader message="Loading patients..." />
           ) : filteredPatients.length === 0 ? (
             <div className="mb-6 rounded-lg border border-dashed border-border p-6 text-center">
               <User className="w-8 h-8 text-text-secondary mx-auto mb-2" />
@@ -162,7 +163,7 @@ export default function CreateReport() {
 
           {/* Test List */}
           {loading ? (
-            <div className="p-4 text-center">Loading tests...</div>
+            <Loader message="Loading tests..." />
           ) : tests.length === 0 ? (
             <div className="mb-6 rounded-lg border border-dashed border-border p-6 text-center">
               <TestTube className="w-8 h-8 text-text-secondary mx-auto mb-2" />

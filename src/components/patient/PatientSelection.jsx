@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import Loader from '../common/Loader';
 
 export default function PatientSelection() {
   const [patients, setPatients] = useState([]);
@@ -25,14 +26,7 @@ export default function PatientSelection() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-text-secondary">Loading patients...</p>
-        </div>
-      </div>
-    );
+    return <Loader message="Loading patients..." />;
   }
 
   return (

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, CheckCircle, FlaskConical } from 'lucide-react';
 import api from '../../api/axiosConfig';
+import Loader from '../common/Loader';
 
 export default function ReportEntry() {
   const { id } = useParams();
@@ -14,12 +15,6 @@ export default function ReportEntry() {
   useEffect(() => {
     const fetchReport = async () => {
       try {
-        // Fetch specific report using the general endpoint or specific logic if needed
-        // Since we only have /reports to list all, we might need to filter or fetch directly if there's an endpoint
-        // Wait, backend has GET /api/patient-reports/{reportCode} but that is for patients.
-        // There is GET /api/reports which returns all. Let's fetch all and filter for now, or if there's a specific GET by ID.
-        // Actually, backend has PUT /api/reports/{id}/results, but no GET /api/reports/{id}.
-        // Let's get all reports and find the one matching ID.
         const response = await api.get('/reports');
         const found = response.data?.find(r => String(r.id) === String(id));
         setReport(found || { id, reportCode: `RPT-${id || '---'}` });
@@ -48,7 +43,6 @@ export default function ReportEntry() {
   const handleMarkComplete = async () => {
     setSaving(true);
     try {
-      // Typically verifications happen after saving results
       await api.put(`/reports/${id}/verify`, { comments: 'Verified' });
       navigate('/staff/reports');
     } catch (err) {
@@ -60,7 +54,7 @@ export default function ReportEntry() {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-text-secondary">Loading report...</div>;
+    return <Loader message="Loading report..." />;
   }
 
   return (

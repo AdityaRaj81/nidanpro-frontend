@@ -1,6 +1,7 @@
 import { FileText, Clock, CheckCircle, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import api from '../../api/axiosConfig';
+import Loader from '../common/Loader';
 
 export default function Dashboard() {
   const [reports, setReports] = useState([]);
@@ -57,7 +58,7 @@ export default function Dashboard() {
   ];
 
   if (loading) {
-    return <div className="p-8 text-center text-text-secondary">Loading dashboard...</div>;
+    return <Loader message="Loading dashboard..." />;
   }
 
   return (
