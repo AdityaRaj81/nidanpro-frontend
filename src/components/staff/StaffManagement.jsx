@@ -42,7 +42,8 @@ export default function StaffManagement() {
     alert('Staff member added successfully!');
   };
 
-  if (staffAuth?.role !== 'admin') {
+  const isAdmin = staffAuth?.role?.toUpperCase() === 'ADMIN' || staffAuth?.role?.toUpperCase() === 'SUPER_ADMIN';
+  if (!isAdmin) {
     return (
       <div className="card p-8 text-center">
         <h2 className="text-h2 font-semibold text-text-primary mb-2">Access Restricted</h2>
