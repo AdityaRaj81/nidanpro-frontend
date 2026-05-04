@@ -96,13 +96,13 @@ export default function LandingPage() {
                 precision.
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
-                <Link
+                {/* <Link
                   to="/login"
                   className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-600"
                 >
                   Staff Workspace
                   <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
+                </Link> */}
                 <Link
                   to="/patient-access"
                   className="inline-flex items-center justify-center rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-secondary-600"
@@ -247,8 +247,6 @@ export default function LandingPage() {
               <li><a href="#home" className="hover:text-primary">Home</a></li>
               <li><a href="#features" className="hover:text-primary">Features</a></li>
               <li><a href="#contact" className="hover:text-primary">Contact</a></li>
-              <li><Link to="/staff/login" className="hover:text-primary font-medium text-primary">Staff Login</Link></li>
-              <li><Link to="/staff/login?type=admin" className="hover:text-primary font-medium text-secondary">Super Admin Login</Link></li>
             </ul>
           </div>
 
@@ -263,6 +261,8 @@ export default function LandingPage() {
                 <Phone className="h-4 w-4" />
                 +91 98765 43210
               </li>
+              <li><Link to="/staff/login" className="hover:text-primary font-medium text-primary">Staff Workspace</Link></li>
+              <li><Link to="/staff/login?type=admin" className="hover:text-primary font-medium text-secondary">Admin</Link></li>
             </ul>
           </div>
         </div>

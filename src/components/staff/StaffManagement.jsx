@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Plus, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, User, Loader as LoaderIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axiosConfig';
 
 export default function StaffManagement() {
   const [staff, setStaff] = useState([]);
@@ -21,7 +22,25 @@ export default function StaffManagement() {
     { value: 'sample_collector', label: 'Sample Collector', description: 'Patient registration' }
   ];
 
-  const handleAddStaff = (e) => {
+  const [loading, setLoading] = useState(true);
+
+  const fetchStaff = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/staff');
+      setStaff(response.data || []);
+    } catch (error) {
+      console.error('Error fetching staff:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStaff();
+  }, []);
+
+  const handleAddStaff = async (e) => {
     e.preventDefault();
 
     if (!newStaff.name || !newStaff.email || !newStaff.role || !newStaff.password) {
@@ -29,17 +48,21 @@ export default function StaffManagement() {
       return;
     }
 
-    const staffMember = {
-      id: staff.length + 1,
-      ...newStaff,
-      isActive: true,
-      lastLogin: null
-    };
-
-    setStaff([...staff, staffMember]);
-    setNewStaff({ name: '', email: '', phone: '', role: '', password: '' });
-    setShowAddForm(false);
-    alert('Staff member added successfully!');
+    try {
+      await api.post('/staff', {
+        name: newStaff.name,
+        email: newStaff.email,
+        password: newStaff.password,
+        roleId: roles.findIndex(r => r.value === newStaff.role) + 1 // Assuming 1-indexed based on dropdown
+      });
+      setNewStaff({ name: '', email: '', phone: '', role: '', password: '' });
+      setShowAddForm(false);
+      alert('Staff member added successfully!');
+      fetchStaff(); // Refresh the list
+    } catch (error) {
+      console.error('Error adding staff:', error);
+      alert(error.response?.data?.message || 'Failed to add staff member');
+    }
   };
 
   const isAdmin = staffAuth?.role?.toUpperCase() === 'ADMIN' || staffAuth?.role?.toUpperCase() === 'SUPER_ADMIN';
@@ -162,13 +185,44 @@ export default function StaffManagement() {
         <div className="p-6 border-b border-border">
           <h2 className="text-h3 font-semibold">All Staff Members ({staff.length})</h2>
         </div>
-        <div className="p-8 text-center">
-          <User className="w-10 h-10 text-text-secondary mx-auto mb-3" />
-          <p className="text-text-primary font-medium">No staff list loaded</p>
-          <p className="text-sm text-text-secondary mt-1">
-            Staff accounts, role tags, and status actions will appear after backend fetch.
-          </p>
-        </div>
+        
+        {loading ? (
+          <div className="p-8 text-center text-text-secondary">Loading staff members...</div>
+        ) : staff.length === 0 ? (
+          <div className="p-8 text-center">
+            <User className="w-10 h-10 text-text-secondary mx-auto mb-3" />
+            <p className="text-text-primary font-medium">No staff found</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-border bg-slate-50 text-text-secondary text-sm">
+                  <th className="p-4 font-medium">Name</th>
+                  <th className="p-4 font-medium">Email</th>
+                  <th className="p-4 font-medium">Role</th>
+                  <th className="p-4 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {staff.map((member) => (
+                  <tr key={member.id} className="border-b border-border hover:bg-slate-50 transition-colors">
+                    <td className="p-4 font-medium text-text-primary">{member.name}</td>
+                    <td className="p-4 text-text-secondary">{member.email}</td>
+                    <td className="p-4 text-text-secondary capitalize">{member.role}</td>
+                    <td className="p-4">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        member.active !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {member.active !== false ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
