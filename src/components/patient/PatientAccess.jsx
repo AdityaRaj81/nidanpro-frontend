@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Phone, Shield, FileText } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axiosConfig';
 
 export default function PatientAccess() {
   const [phone, setPhone] = useState('');
@@ -12,16 +13,6 @@ export default function PatientAccess() {
   const navigate = useNavigate();
   const { setPatientAuth } = useAuth();
 
-  const patientsByPhone = {
-    '9876543210': [
-      { id: 1, name: 'Aarav Mehta', age: 29, gender: 'Male', patientId: 'P001' },
-      { id: 2, name: 'Saanvi Mehta', age: 26, gender: 'Female', patientId: 'P002' }
-    ],
-    '9999999999': [
-      { id: 3, name: 'Riya Verma', age: 34, gender: 'Female', patientId: 'P003' }
-    ]
-  };
-
   const handleSendOTP = async () => {
     if (!phone || phone.length < 10) {
       alert('Please enter a valid phone number');
@@ -29,12 +20,16 @@ export default function PatientAccess() {
     }
 
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await api.post('/patient-auth/send-otp', { phoneNumber: phone });
       setOtpSent(true);
-      setLoading(false);
       alert('OTP sent to your phone');
-    }, 1000);
+    } catch (err) {
+      console.error('Send OTP error', err);
+      alert('Failed to send OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleVerifyOTP = async () => {
@@ -44,25 +39,23 @@ export default function PatientAccess() {
     }
 
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      const normalizedPhone = phone.replace(/\D/g, '').slice(-10);
-      const matchedPatients = patientsByPhone[normalizedPhone] || [
-        { id: 9, name: 'Registered Patient', age: 31, gender: 'Male', patientId: 'P009' }
-      ];
-
-      const authPayload = { phone: normalizedPhone, verified: true, patients: matchedPatients };
-
+    try {
+      const response = await api.post('/patient-auth/verify-otp', { phoneNumber: phone, otp });
+      const authPayload = { phone, verified: true, token: response.data.token, user: response.data };
       setPatientAuth(authPayload);
-      setLoading(false);
-
-      if (matchedPatients.length === 1) {
-        navigate('/patient/profile', { state: { patient: matchedPatients[0] } });
-        return;
+      
+      // If we have patient objects returned, we can navigate directly
+      if (response.data.patients && response.data.patients.length === 1) {
+        navigate('/patient/profile', { state: { patient: response.data.patients[0] } });
+      } else {
+        navigate('/patients');
       }
-
-      navigate('/patients');
-    }, 1000);
+    } catch (err) {
+      console.error('Verify OTP error', err);
+      alert('Invalid OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReportCode = async () => {
@@ -72,11 +65,16 @@ export default function PatientAccess() {
     }
 
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // Just verify if the report exists, then navigate
+      await api.get(`/patient-reports/${reportCode}`);
       navigate(`/report/${reportCode}`);
-    }, 1000);
+    } catch (err) {
+      console.error('Report lookup error', err);
+      alert('Report not found. Please check the code.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

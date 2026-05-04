@@ -1,18 +1,28 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, User, Calendar, FileText, CheckCircle } from 'lucide-react';
+import api from '../../api/axiosConfig';
 
 export default function ReportView() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [report] = useState({ reportCode: id });
+  const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-  }, []);
+    const fetchReport = async () => {
+      try {
+        const response = await api.get(`/patient-reports/${id}`);
+        setReport(response.data);
+      } catch (err) {
+        console.error('Error fetching patient report:', err);
+        setReport(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReport();
+  }, [id]);
 
   const handleDownload = () => {
     alert('Downloading PDF report...');
@@ -80,7 +90,7 @@ export default function ReportView() {
 
           {/* Lab Header */}
           <div className="card p-6 text-center">
-            <h2 className="text-h1 font-bold text-primary mb-2">Lab Name from Backend</h2>
+            <h2 className="text-h1 font-bold text-primary mb-2">NidanPro Lab</h2>
             <p className="text-text-secondary">Digitize. Optimize. Deliver.</p>
           </div>
 
@@ -93,19 +103,11 @@ export default function ReportView() {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-text-secondary">Name:</span>
-                <p className="font-medium">--</p>
+                <p className="font-medium">{report.patientName || 'No data found'}</p>
               </div>
               <div>
                 <span className="text-text-secondary">Patient ID:</span>
-                <p className="font-medium">--</p>
-              </div>
-              <div>
-                <span className="text-text-secondary">Age:</span>
-                <p className="font-medium">-- years</p>
-              </div>
-              <div>
-                <span className="text-text-secondary">Gender:</span>
-                <p className="font-medium">--</p>
+                <p className="font-medium">{report.patientId || 'No data found'}</p>
               </div>
             </div>
           </div>
@@ -119,16 +121,16 @@ export default function ReportView() {
             <div className="grid grid-cols-1 gap-4 text-sm">
               <div>
                 <span className="text-text-secondary">Test Name:</span>
-                <p className="font-medium">From backend</p>
+                <p className="font-medium">{report.testName || 'No data found'}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="text-text-secondary">Collection Date:</span>
-                  <p className="font-medium">--</p>
+                  <p className="font-medium">{report.createdAt ? new Date(report.createdAt).toLocaleDateString() : 'No data found'}</p>
                 </div>
                 <div>
-                  <span className="text-text-secondary">Report Date:</span>
-                  <p className="font-medium">--</p>
+                  <span className="text-text-secondary">Status:</span>
+                  <p className="font-medium">{report.status || 'No data found'}</p>
                 </div>
               </div>
             </div>
@@ -138,10 +140,7 @@ export default function ReportView() {
           <div className="card p-6">
             <h3 className="text-h3 font-semibold mb-4">Test Results</h3>
             <div className="rounded-lg border border-dashed border-border p-6 text-center">
-              <p className="text-text-primary font-medium">No parameter values loaded</p>
-              <p className="text-sm text-text-secondary mt-1">
-                Result rows and reference ranges will be filled from backend report payload.
-              </p>
+              <p className="text-text-primary font-medium">No results data found</p>
             </div>
           </div>
 
@@ -151,11 +150,8 @@ export default function ReportView() {
               <div>
                 <div className="flex items-center mb-2">
                   <CheckCircle className="w-5 h-5 text-secondary mr-2" />
-                  <span className="font-medium">Verified by: --</span>
+                  <span className="font-medium">Verified Status: {report.status === 'VERIFIED' ? 'Verified' : 'Pending'}</span>
                 </div>
-                <p className="text-text-secondary text-sm">
-                  Verified on: --
-                </p>
               </div>
             </div>
           </div>

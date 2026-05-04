@@ -15,11 +15,8 @@ export default function PatientSelection() {
       return;
     }
 
-    // Simulate API call to fetch patients for this phone number
-    setTimeout(() => {
-      setPatients(patientAuth?.patients || []);
-      setLoading(false);
-    }, 1000);
+    setPatients(patientAuth?.user?.patients || patientAuth?.patients || []);
+    setLoading(false);
   }, [patientAuth, navigate]);
 
   const handlePatientSelect = (patient) => {

@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AuthContext } from './context/AuthContext';
 
 // Patient Side Components
@@ -22,10 +22,37 @@ import StaffManagement from './components/staff/StaffManagement';
 import Settings from './components/staff/Settings';
 import StaffLogin from './components/staff/StaffLogin';
 import LandingPage from './components/public/LandingPage';
+import NotFound from './components/public/NotFound';
 
 function App() {
-  const [staffAuth, setStaffAuth] = useState(null);
-  const [patientAuth, setPatientAuth] = useState(null);
+  const [staffAuth, setStaffAuth] = useState(() => {
+    const saved = localStorage.getItem('staffAuth');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [patientAuth, setPatientAuth] = useState(() => {
+    const saved = localStorage.getItem('patientAuth');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  useEffect(() => {
+    if (staffAuth) {
+      localStorage.setItem('staffAuth', JSON.stringify(staffAuth));
+      if (staffAuth.token) localStorage.setItem('staffToken', staffAuth.token);
+    } else {
+      localStorage.removeItem('staffAuth');
+      localStorage.removeItem('staffToken');
+    }
+  }, [staffAuth]);
+
+  useEffect(() => {
+    if (patientAuth) {
+      localStorage.setItem('patientAuth', JSON.stringify(patientAuth));
+      if (patientAuth.token) localStorage.setItem('patientToken', patientAuth.token);
+    } else {
+      localStorage.removeItem('patientAuth');
+      localStorage.removeItem('patientToken');
+    }
+  }, [patientAuth]);
 
   const authValue = {
     staffAuth,
@@ -67,6 +94,9 @@ function App() {
 
             {/* Public Landing */}
             <Route path="/" element={<LandingPage />} />
+
+            {/* 404 Route */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
       </Router>

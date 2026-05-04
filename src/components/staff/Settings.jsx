@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, Upload, Building, FileText, Signature } from 'lucide-react';
 
 export default function Settings() {
@@ -12,6 +12,17 @@ export default function Settings() {
     signature: null
   });
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('nidanpro_settings');
+    if (saved) {
+      try {
+        setSettings(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to parse settings', e);
+      }
+    }
+  }, []);
 
   const handleInputChange = (field, value) => {
     setSettings(prev => ({ ...prev, [field]: value }));
@@ -29,10 +40,15 @@ export default function Settings() {
 
   const handleSave = async () => {
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      localStorage.setItem('nidanpro_settings', JSON.stringify(settings));
       alert('Settings saved successfully!');
-    }, 1000);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

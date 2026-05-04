@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, FileText, Download, Eye, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axiosConfig';
 
 export default function PatientReports() {
   const [reports, setReports] = useState([]);
@@ -17,15 +18,21 @@ export default function PatientReports() {
       return;
     }
 
-    // Backend-ready: reports will be fetched by API and bound here
-    setTimeout(() => {
-      setReports([]);
-      setLoading(false);
-    }, 1000);
+    const fetchReports = async () => {
+      try {
+        const response = await api.get(`/patient-reports?patientId=${patient.id}`);
+        setReports(response.data || []);
+      } catch (err) {
+        console.error('Error fetching patient reports:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReports();
   }, [patient, navigate]);
 
   const handleViewReport = (report) => {
-    if (report.status === 'completed') {
+    if (report.status === 'VERIFIED' || report.status === 'COMPLETED') {
       navigate(`/report/${report.reportCode}`);
     } else {
       alert('Report is still being processed');
@@ -33,9 +40,8 @@ export default function PatientReports() {
   };
 
   const handleDownloadReport = (report) => {
-    if (report.status === 'completed') {
-      // Simulate download
-      alert(`Downloading ${report.testName} report...`);
+    if (report.status === 'VERIFIED' || report.status === 'COMPLETED') {
+      alert(`Downloading ${report.testName || 'report'}...`);
     } else {
       alert('Report is not ready for download');
     }
@@ -79,7 +85,7 @@ export default function PatientReports() {
               </div>
               <div>
                 <h2 className="text-h3 font-semibold text-text-primary">{patient?.name}</h2>
-                <p className="text-text-secondary text-sm">Patient ID: {patient?.patientId}</p>
+                <p className="text-text-secondary text-sm">Patient ID: {patient?.id || patient?.patientId}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -102,17 +108,21 @@ export default function PatientReports() {
 
             {reports.length === 0 ? (
               <div className="rounded-lg border border-dashed border-border p-5 text-center">
-                <p className="text-text-primary font-medium">No reports loaded yet</p>
-                <p className="text-sm text-text-secondary mt-1">
-                  Backend report data for this patient will appear here.
-                </p>
+                <p className="text-text-primary font-medium">No data found</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {reports.map((report) => (
                   <div key={report.id} className="rounded-lg border border-border p-4">
-                    <p className="font-medium text-text-primary">{report.testName}</p>
-                    <p className="text-sm text-text-secondary mt-1">{new Date(report.date).toLocaleDateString()}</p>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium text-text-primary">{report.testName || report.reportCode}</p>
+                        <p className="text-sm text-text-secondary mt-1">{report.createdAt ? new Date(report.createdAt).toLocaleDateString() : 'N/A'}</p>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full ${report.status === 'VERIFIED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {report.status}
+                      </span>
+                    </div>
                     <div className="mt-3 flex gap-2">
                       <button onClick={() => handleViewReport(report)} className="btn-primary px-4 py-2 text-sm inline-flex items-center">
                         <Eye className="w-4 h-4 mr-2" />

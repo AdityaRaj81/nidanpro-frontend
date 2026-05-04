@@ -1,20 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, XCircle, MessageSquare } from 'lucide-react';
+import api from '../../api/axiosConfig';
 
 export default function Verification() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [report] = useState({ reportCode: `RPT-${id || '---'}` });
+  const [report, setReport] = useState(null);
   const [remarks, setRemarks] = useState('');
+  const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+
+  useEffect(() => {
+    const fetchReport = async () => {
+      try {
+        const response = await api.get('/reports');
+        const found = response.data?.find(r => String(r.id) === String(id));
+        setReport(found || { id, reportCode: `RPT-${id || '---'}` });
+      } catch (err) {
+        console.error('Error fetching report:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReport();
+  }, [id]);
 
   const handleApprove = async () => {
     setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
+    try {
+      await api.put(`/reports/${id}/verify`, { comments: remarks, status: 'VERIFIED' });
+      alert('Report verified successfully');
       navigate('/staff/reports');
-    }, 1000);
+    } catch (err) {
+      console.error('Verify error', err);
+      alert('Failed to verify report');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const handleReject = async () => {
@@ -24,11 +47,21 @@ export default function Verification() {
     }
 
     setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
+    try {
+      await api.put(`/reports/${id}/verify`, { comments: remarks, status: 'REJECTED' });
+      alert('Report rejected');
       navigate('/staff/reports');
-    }, 1000);
+    } catch (err) {
+      console.error('Reject error', err);
+      alert('Failed to reject report');
+    } finally {
+      setProcessing(false);
+    }
   };
+
+  if (loading) {
+    return <div className="p-8 text-center text-text-secondary">Loading verification details...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -54,19 +87,11 @@ export default function Verification() {
           <div className="space-y-3 text-sm">
             <div>
               <span className="text-text-secondary">Name:</span>
-              <p className="font-medium">From backend</p>
+              <p className="font-medium">{report?.patientName || 'No data found'}</p>
             </div>
             <div>
               <span className="text-text-secondary">Patient ID:</span>
-              <p className="font-medium">--</p>
-            </div>
-            <div>
-              <span className="text-text-secondary">Age:</span>
-              <p className="font-medium">-- years</p>
-            </div>
-            <div>
-              <span className="text-text-secondary">Gender:</span>
-              <p className="font-medium">--</p>
+              <p className="font-medium">{report?.patientId || 'No data found'}</p>
             </div>
           </div>
         </div>
@@ -77,19 +102,11 @@ export default function Verification() {
           <div className="space-y-3 text-sm">
             <div>
               <span className="text-text-secondary">Test Name:</span>
-              <p className="font-medium">From backend</p>
-            </div>
-            <div>
-              <span className="text-text-secondary">Test Code:</span>
-              <p className="font-medium">--</p>
+              <p className="font-medium">{report?.testName || 'No data found'}</p>
             </div>
             <div>
               <span className="text-text-secondary">Report Code:</span>
-              <p className="font-medium font-mono">{report?.reportCode}</p>
-            </div>
-            <div>
-              <span className="text-text-secondary">Test Date:</span>
-              <p className="font-medium">--</p>
+              <p className="font-medium font-mono">{report?.reportCode || 'No data found'}</p>
             </div>
           </div>
         </div>
@@ -99,16 +116,8 @@ export default function Verification() {
           <h3 className="text-h3 font-semibold mb-4">Entry Information</h3>
           <div className="space-y-3 text-sm">
             <div>
-              <span className="text-text-secondary">Technician:</span>
-              <p className="font-medium">From backend</p>
-            </div>
-            <div>
-              <span className="text-text-secondary">Entry Date:</span>
-              <p className="font-medium">--</p>
-            </div>
-            <div>
               <span className="text-text-secondary">Status:</span>
-              <p className="font-medium text-yellow-600">Pending Verification</p>
+              <p className="font-medium text-yellow-600">{report?.status || 'No data found'}</p>
             </div>
           </div>
         </div>
@@ -118,10 +127,7 @@ export default function Verification() {
       <div className="card p-6">
         <h3 className="text-h3 font-semibold mb-4">Test Results</h3>
         <div className="rounded-lg border border-dashed border-border p-6 text-center">
-          <p className="text-text-primary font-medium">No result rows loaded</p>
-          <p className="text-sm text-text-secondary mt-1">
-            Parameter values and validation markers will be populated from backend report payload.
-          </p>
+          <p className="text-text-primary font-medium">No results found for verification</p>
         </div>
       </div>
 

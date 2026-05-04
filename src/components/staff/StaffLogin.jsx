@@ -3,11 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Shield, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import DesktopOnlyNotice from './DesktopOnlyNotice';
+import api from '../../api/axiosConfig';
 
 export default function StaffLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
   const navigate = useNavigate();
   const { setStaffAuth } = useAuth();
@@ -20,25 +22,33 @@ export default function StaffLogin() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
 
     if (!email || !password) {
-      alert('Please fill in all fields');
+      setError('Please fill in all fields');
       return;
     }
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      const data = response.data;
+      
       setStaffAuth({
-        email,
-        name: 'Dr. John Smith',
-        role: 'admin',
-        token: 'fake-jwt-token'
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        role: data.role,
+        token: data.token
       });
-      setLoading(false);
       navigate('/staff/dashboard');
-    }, 1000);
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isDesktop) {
@@ -63,6 +73,11 @@ export default function StaffLogin() {
 
         {/* Login Form */}
         <div className="card p-8">
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm text-center">
+              {error}
+            </div>
+          )}
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-sm font-medium mb-2">Email Address</label>

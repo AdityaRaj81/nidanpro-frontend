@@ -1,11 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter, Plus, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import api from '../../api/axiosConfig';
 
 export default function Reports() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('');
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await api.get('/reports');
+        setReports(response.data || []);
+      } catch (error) {
+        console.error('Error fetching reports:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReports();
+  }, []);
+
+  const filteredReports = reports.filter(report => {
+    const matchesSearch = report.reportCode?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          report.patientName?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || report.status?.toLowerCase() === statusFilter.toLowerCase();
+    const matchesDate = !dateFilter || report.createdAt?.startsWith(dateFilter);
+    return matchesSearch && matchesStatus && matchesDate;
+  });
 
   return (
     <div className="space-y-6">
@@ -31,7 +56,7 @@ export default function Reports() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by report code, patient name, or test..."
+                placeholder="Search by report code, patient name..."
                 className="input-field pl-10"
               />
             </div>
@@ -47,7 +72,7 @@ export default function Reports() {
                 <option value="all">All Status</option>
                 <option value="completed">Completed</option>
                 <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
+                <option value="verified">Verified</option>
               </select>
             </div>
           </div>
@@ -67,13 +92,50 @@ export default function Reports() {
         <div className="p-6 border-b border-border">
           <h2 className="text-h3 font-semibold">All Reports</h2>
         </div>
-        <div className="p-8 text-center">
-          <FileText className="w-10 h-10 text-text-secondary mx-auto mb-3" />
-          <p className="text-text-primary font-medium">No reports loaded</p>
-          <p className="text-sm text-text-secondary mt-1">
-            Filter values are ready. Report rows and actions will appear after backend response.
-          </p>
-        </div>
+        
+        {loading ? (
+          <div className="p-8 text-center text-text-secondary">Loading reports...</div>
+        ) : filteredReports.length === 0 ? (
+          <div className="p-8 text-center">
+            <FileText className="w-10 h-10 text-text-secondary mx-auto mb-3" />
+            <p className="text-text-primary font-medium">No data found</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="p-4 font-medium text-gray-600">Report Code</th>
+                  <th className="p-4 font-medium text-gray-600">Patient</th>
+                  <th className="p-4 font-medium text-gray-600">Status</th>
+                  <th className="p-4 font-medium text-gray-600">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredReports.map((report) => (
+                  <tr key={report.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="p-4 font-medium text-gray-900">{report.reportCode}</td>
+                    <td className="p-4 text-gray-600">{report.patientName}</td>
+                    <td className="p-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        report.status === 'VERIFIED' ? 'bg-green-100 text-green-700' : 
+                        report.status === 'COMPLETED' ? 'bg-blue-100 text-blue-700' :
+                        'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {report.status}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <Link to={`/staff/reports/entry/${report.id}`} className="text-primary hover:underline text-sm font-medium">
+                        View/Edit
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

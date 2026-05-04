@@ -1,11 +1,61 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, User, TestTube } from 'lucide-react';
+import api from '../../api/axiosConfig';
 
 export default function CreateReport() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [patients, setPatients] = useState([]);
+  const [tests, setTests] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [selectedTest, setSelectedTest] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [patientsRes, testsRes] = await Promise.all([
+          api.get('/patients'),
+          api.get('/tests')
+        ]);
+        setPatients(patientsRes.data || []);
+        setTests(testsRes.data || []);
+      } catch (error) {
+        console.error('Error fetching data for report creation:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const filteredPatients = patients.filter(p => 
+    p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    p.phone?.includes(searchTerm) || 
+    p.patientId?.includes(searchTerm)
+  );
+
+  const handleCreateReport = async () => {
+    try {
+      const payload = {
+        patientId: selectedPatient.id || selectedPatient.patientId,
+        patientName: selectedPatient.name,
+        testId: selectedTest.id,
+        testName: selectedTest.name || selectedTest.testName,
+        reportCode: `RPT-${Date.now().toString().slice(-6)}`
+      };
+      await api.post('/reports', payload);
+      alert('Report created successfully!');
+      navigate('/staff/reports');
+    } catch (error) {
+      console.error('Error creating report:', error);
+      alert('Failed to create report.');
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -72,18 +122,32 @@ export default function CreateReport() {
           </div>
 
           {/* Patient List */}
-          <div className="mb-6 rounded-lg border border-dashed border-border p-6 text-center">
-            <User className="w-8 h-8 text-text-secondary mx-auto mb-2" />
-            <p className="text-text-primary font-medium">Patient list not loaded</p>
-            <p className="text-sm text-text-secondary mt-1">
-              Matching patients from backend search will appear here.
-            </p>
-          </div>
+          {loading ? (
+            <div className="p-4 text-center">Loading patients...</div>
+          ) : filteredPatients.length === 0 ? (
+            <div className="mb-6 rounded-lg border border-dashed border-border p-6 text-center">
+              <User className="w-8 h-8 text-text-secondary mx-auto mb-2" />
+              <p className="text-text-primary font-medium">No patient data found</p>
+            </div>
+          ) : (
+            <div className="mb-6 space-y-2 max-h-60 overflow-y-auto pr-2">
+              {filteredPatients.map(p => (
+                <div 
+                  key={p.id} 
+                  onClick={() => setSelectedPatient(p)}
+                  className={`p-3 border rounded-lg cursor-pointer ${selectedPatient?.id === p.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-gray-50'}`}
+                >
+                  <p className="font-medium">{p.name} <span className="text-sm text-text-secondary">({p.phone})</span></p>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="flex justify-end">
             <button
               onClick={() => setStep(2)}
-              className="btn-primary"
+              disabled={!selectedPatient}
+              className="btn-primary disabled:opacity-50"
             >
               Next: Select Test
             </button>
@@ -97,13 +161,26 @@ export default function CreateReport() {
           <h2 className="text-h3 font-semibold mb-4">Select Test</h2>
 
           {/* Test List */}
-          <div className="mb-6 rounded-lg border border-dashed border-border p-6 text-center">
-            <TestTube className="w-8 h-8 text-text-secondary mx-auto mb-2" />
-            <p className="text-text-primary font-medium">Test catalog not loaded</p>
-            <p className="text-sm text-text-secondary mt-1">
-              Available tests from backend will be selectable here.
-            </p>
-          </div>
+          {loading ? (
+            <div className="p-4 text-center">Loading tests...</div>
+          ) : tests.length === 0 ? (
+            <div className="mb-6 rounded-lg border border-dashed border-border p-6 text-center">
+              <TestTube className="w-8 h-8 text-text-secondary mx-auto mb-2" />
+              <p className="text-text-primary font-medium">No tests found</p>
+            </div>
+          ) : (
+            <div className="mb-6 space-y-2 max-h-60 overflow-y-auto pr-2">
+              {tests.map(t => (
+                <div 
+                  key={t.id} 
+                  onClick={() => setSelectedTest(t)}
+                  className={`p-3 border rounded-lg cursor-pointer ${selectedTest?.id === t.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-gray-50'}`}
+                >
+                  <p className="font-medium">{t.name || t.testName}</p>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="flex justify-between">
             <button
@@ -114,7 +191,8 @@ export default function CreateReport() {
             </button>
             <button
               onClick={() => setStep(3)}
-              className="btn-primary"
+              disabled={!selectedTest}
+              className="btn-primary disabled:opacity-50"
             >
               Next: Confirm
             </button>
@@ -130,12 +208,13 @@ export default function CreateReport() {
           <div className="space-y-6 mb-6">
             <div className="p-4 bg-gray-50 rounded-lg">
               <h3 className="font-medium text-text-primary mb-2">Patient Information</h3>
-              <p className="text-sm text-text-secondary">Selected patient data from backend will be displayed here.</p>
+              <p className="text-sm font-medium">{selectedPatient?.name}</p>
+              <p className="text-sm text-text-secondary">Phone: {selectedPatient?.phone}</p>
             </div>
 
             <div className="p-4 bg-gray-50 rounded-lg">
               <h3 className="font-medium text-text-primary mb-2">Test Information</h3>
-              <p className="text-sm text-text-secondary">Selected test metadata from backend will be displayed here.</p>
+              <p className="text-sm font-medium">{selectedTest?.name || selectedTest?.testName}</p>
             </div>
           </div>
 
@@ -147,7 +226,7 @@ export default function CreateReport() {
               Back
             </button>
             <button
-              onClick={() => navigate('/staff/reports')}
+              onClick={handleCreateReport}
               className="btn-primary"
             >
               Create Report
