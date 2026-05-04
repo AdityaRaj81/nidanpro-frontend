@@ -40,18 +40,27 @@ export default function StaffLayout() {
     navigate('/staff/login');
   };
 
+  const role = staffAuth?.role?.toUpperCase();
+  const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
+
   const menuItems = [
-    { path: '/staff/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/staff/patients', icon: Users, label: 'Patients' },
-    { path: '/staff/reports', icon: FileText, label: 'Reports' },
-    { path: '/staff/tests', icon: TestTube, label: 'Tests' },
-    { path: '/staff/settings', icon: Settings, label: 'Settings' },
+    { path: '/staff/dashboard', icon: LayoutDashboard, label: 'Dashboard' }
   ];
 
-  const isAdmin = staffAuth?.role?.toUpperCase() === 'ADMIN' || staffAuth?.role?.toUpperCase() === 'SUPER_ADMIN';
-  if (isAdmin) {
-    menuItems.splice(4, 0, { path: '/staff/staff-management', icon: UserCog, label: 'Staff' });
+  if (isAdmin || role === 'SAMPLE_COLLECTOR') {
+    menuItems.push({ path: '/staff/patients', icon: Users, label: 'Patients' });
   }
+  if (isAdmin || role === 'PATHOLOGIST') {
+    menuItems.push({ path: '/staff/reports', icon: FileText, label: 'Reports' });
+  }
+  if (isAdmin || role === 'TECHNICIAN') {
+    menuItems.push({ path: '/staff/tests', icon: TestTube, label: 'Tests' });
+  }
+  if (isAdmin) {
+    menuItems.push({ path: '/staff/staff-management', icon: UserCog, label: 'Staff' });
+  }
+
+  menuItems.push({ path: '/staff/settings', icon: Settings, label: 'Settings' });
 
   if (!isStaffAuthenticated) {
     return null;

@@ -43,7 +43,7 @@ export default function StaffManagement() {
   const handleAddStaff = async (e) => {
     e.preventDefault();
 
-    if (!newStaff.name || !newStaff.email || !newStaff.role || !newStaff.password) {
+    if (!newStaff.name || !newStaff.role || !newStaff.password) {
       alert('Please fill in all required fields');
       return;
     }
@@ -117,13 +117,12 @@ export default function StaffManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Email Address *</label>
+                <label className="block text-sm font-medium mb-2">Email Address (Optional)</label>
                 <input
                   type="email"
                   value={newStaff.email}
                   onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
                   className="input-field"
-                  required
                 />
               </div>
             </div>
@@ -198,6 +197,7 @@ export default function StaffManagement() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-border bg-slate-50 text-text-secondary text-sm">
+                  <th className="p-4 font-medium">Emp ID</th>
                   <th className="p-4 font-medium">Name</th>
                   <th className="p-4 font-medium">Email</th>
                   <th className="p-4 font-medium">Role</th>
@@ -207,8 +207,9 @@ export default function StaffManagement() {
               <tbody>
                 {staff.map((member) => (
                   <tr key={member.id} className="border-b border-border hover:bg-slate-50 transition-colors">
+                    <td className="p-4 font-bold text-primary">{member.employeeCode}</td>
                     <td className="p-4 font-medium text-text-primary">{member.name}</td>
-                    <td className="p-4 text-text-secondary">{member.email}</td>
+                    <td className="p-4 text-text-secondary">{member.email || '-'}</td>
                     <td className="p-4 text-text-secondary capitalize">{member.role}</td>
                     <td className="p-4">
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${

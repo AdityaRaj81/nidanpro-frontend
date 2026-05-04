@@ -6,8 +6,9 @@ import DesktopOnlyNotice from './DesktopOnlyNotice';
 import api from '../../api/axiosConfig';
 
 export default function StaffLogin() {
-  const [email, setEmail] = useState('');
+  const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
@@ -26,15 +27,19 @@ export default function StaffLogin() {
     e.preventDefault();
     setError('');
 
-    if (!email || !password) {
-      setError('Please fill in all fields');
+    if (!loginId || !password || (!isAdminLogin && !role)) {
+      setError('Please fill in all required fields');
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const payload = { loginId, password };
+      if (!isAdminLogin) {
+        payload.role = role;
+      }
+      const response = await api.post('/auth/login', payload);
       const data = response.data;
       
       setStaffAuth({
@@ -82,19 +87,38 @@ export default function StaffLogin() {
           )}
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium mb-2">Email Address</label>
+              <label className="block text-sm font-medium mb-2">
+                {isAdminLogin ? 'Admin Email / Code' : 'Employee ID'}
+              </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-secondary" />
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  type={isAdminLogin ? "text" : "text"}
+                  value={loginId}
+                  onChange={(e) => setLoginId(e.target.value)}
+                  placeholder={isAdminLogin ? "Enter your admin email or code" : "Enter your employee ID (e.g. EMP2026...)"}
                   className="input-field pl-10"
                   required
                 />
               </div>
             </div>
+
+            {!isAdminLogin && (
+              <div>
+                <label className="block text-sm font-medium mb-2">Select Your Role</label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="input-field"
+                  required
+                >
+                  <option value="">-- Choose Role --</option>
+                  <option value="technician">Technician</option>
+                  <option value="pathologist">Pathologist</option>
+                  <option value="sample_collector">Sample Collector</option>
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium mb-2">Password</label>
