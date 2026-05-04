@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Shield, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import DesktopOnlyNotice from './DesktopOnlyNotice';
@@ -12,6 +12,8 @@ export default function StaffLogin() {
   const [error, setError] = useState('');
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isAdminLogin = searchParams.get('type') === 'admin';
   const { setStaffAuth } = useAuth();
 
   useEffect(() => {
@@ -61,14 +63,14 @@ export default function StaffLogin() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center">
+            <div className={`w-16 h-16 ${isAdminLogin ? 'bg-secondary' : 'bg-primary'} rounded-lg flex items-center justify-center`}>
               <Shield className="w-8 h-8 text-white" />
             </div>
           </div>
           <Link to="/" className="inline-block text-h1 font-bold text-text-primary mb-2 hover:text-primary transition-colors">
             NidanPro
           </Link>
-          <p className="text-text-secondary">Staff Dashboard Login</p>
+          <p className="text-text-secondary">{isAdminLogin ? 'Super Admin Secure Login' : 'Staff Dashboard Login'}</p>
         </div>
 
         {/* Login Form */}

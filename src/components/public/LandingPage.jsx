@@ -247,6 +247,8 @@ export default function LandingPage() {
               <li><a href="#home" className="hover:text-primary">Home</a></li>
               <li><a href="#features" className="hover:text-primary">Features</a></li>
               <li><a href="#contact" className="hover:text-primary">Contact</a></li>
+              <li><Link to="/staff/login" className="hover:text-primary font-medium text-primary">Staff Login</Link></li>
+              <li><Link to="/staff/login?type=admin" className="hover:text-primary font-medium text-secondary">Super Admin Login</Link></li>
             </ul>
           </div>
 

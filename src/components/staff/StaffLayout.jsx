@@ -48,7 +48,8 @@ export default function StaffLayout() {
     { path: '/staff/settings', icon: Settings, label: 'Settings' },
   ];
 
-  if (staffAuth?.role === 'admin') {
+  const isAdmin = staffAuth?.role?.toUpperCase() === 'ADMIN' || staffAuth?.role?.toUpperCase() === 'SUPER_ADMIN';
+  if (isAdmin) {
     menuItems.splice(4, 0, { path: '/staff/staff-management', icon: UserCog, label: 'Staff' });
   }
 
