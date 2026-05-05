@@ -50,10 +50,13 @@ export default function StaffManagement() {
 
     try {
       await api.post('/staff', {
-        name: newStaff.name,
-        email: newStaff.email,
+        fullName: newStaff.name,
+        email: newStaff.email.trim() || null,
         password: newStaff.password,
-        roleId: roles.findIndex(r => r.value === newStaff.role) + 1 // Assuming 1-indexed based on dropdown
+        role: newStaff.role.toUpperCase(),
+        phone: newStaff.phone || null,
+        signatureUrl: null,
+        active: true
       });
       setNewStaff({ name: '', email: '', phone: '', role: '', password: '' });
       setShowAddForm(false);
