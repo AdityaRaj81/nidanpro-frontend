@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import DesktopOnlyNotice from './DesktopOnlyNotice';
+import NidanProBrand from '../common/NidanProBrand';
 
 export default function StaffLayout() {
   const { staffAuth, setStaffAuth, isStaffAuthenticated } = useAuth();
@@ -77,11 +78,9 @@ export default function StaffLayout() {
         {/* Logo */}
         <div className="p-6 border-b border-border">
           <div className="flex items-center">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center mr-3">
-              <Shield className="w-6 h-6 text-white" />
-            </div>
+            <img src="/logo_NidanPro.png" alt="NidanPro Logo" className="w-10 h-10 rounded-lg mr-3" />
             <div>
-              <h2 className="font-bold text-text-primary">NidanPro</h2>
+              <h2 className="font-bold text-text-primary"><NidanProBrand className="text-sm" variant="text-only" /></h2>
               <p className="text-xs text-text-secondary">Staff Dashboard</p>
             </div>
           </div>

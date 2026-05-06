@@ -4,6 +4,7 @@ import { Shield, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import DesktopOnlyNotice from './DesktopOnlyNotice';
 import api from '../../api/axiosConfig';
+import NidanProBrand from '../common/NidanProBrand';
 
 export default function StaffLogin() {
   const [loginId, setLoginId] = useState('');
@@ -41,7 +42,7 @@ export default function StaffLogin() {
       }
       const response = await api.post('/auth/login', payload);
       const data = response.data;
-      
+
       setStaffAuth({
         id: data.id,
         email: data.email,
@@ -68,12 +69,10 @@ export default function StaffLogin() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className={`w-16 h-16 ${isAdminLogin ? 'bg-secondary' : 'bg-primary'} rounded-lg flex items-center justify-center`}>
-              <Shield className="w-8 h-8 text-white" />
-            </div>
+            <img src="/logo_NidanPro.png" alt="NidanPro Logo" className="w-16 h-16" />
           </div>
-          <Link to="/" className="inline-block text-h1 font-bold text-text-primary mb-2 hover:text-primary transition-colors">
-            NidanPro
+          <Link to="/" className="inline-block text-h1 font-bold text-text-primary mb-2 hover:text-opacity-80 transition-colors">
+            <NidanProBrand className="text-h1" variant="text-only" />
           </Link>
           <p className="text-text-secondary">{isAdminLogin ? 'Super Admin Secure Login' : 'Staff Dashboard Login'}</p>
         </div>
@@ -148,7 +147,7 @@ export default function StaffLogin() {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-text-secondary text-sm">
-            © 2024 NidanPro. All rights reserved.
+            © 2024 <NidanProBrand variant="text-only" />. All rights reserved.
           </p>
         </div>
       </div>

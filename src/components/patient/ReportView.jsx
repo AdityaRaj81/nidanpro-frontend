@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, User, Calendar, FileText, CheckCircle } from 'lucide-react';
 import api from '../../api/axiosConfig';
 import Loader from '../common/Loader';
+import NidanProBrand from '../common/NidanProBrand';
 
 export default function ReportView() {
   const { id } = useParams();
@@ -88,7 +89,7 @@ export default function ReportView() {
 
           {/* Lab Header */}
           <div className="card p-6 text-center">
-            <h2 className="text-h1 font-bold text-primary mb-2">NidanPro Lab</h2>
+            <h2 className="text-h1 font-bold mb-2"><NidanProBrand className="text-h1" variant="text-only" /> Lab</h2>
             <p className="text-text-secondary">Digitize. Optimize. Deliver.</p>
           </div>
 

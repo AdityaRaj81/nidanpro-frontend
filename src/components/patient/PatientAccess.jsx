@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Phone, Shield, FileText } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axiosConfig';
+import NidanProBrand from '../common/NidanProBrand';
 
 export default function PatientAccess() {
   const [phone, setPhone] = useState('');
@@ -43,7 +44,7 @@ export default function PatientAccess() {
       const response = await api.post('/patient-auth/verify-otp', { phoneNumber: phone, otp });
       const authPayload = { phone, verified: true, token: response.data.token, user: response.data };
       setPatientAuth(authPayload);
-      
+
       // If we have patient objects returned, we can navigate directly
       if (response.data.patients && response.data.patients.length === 1) {
         navigate('/patient/profile', { state: { patient: response.data.patients[0] } });
@@ -82,12 +83,10 @@ export default function PatientAccess() {
       {/* Header */}
       <div className="text-center py-8 px-4">
         <div className="flex items-center justify-center mb-4">
-          <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-            <Shield className="w-6 h-6 text-white" />
-          </div>
+          <img src="/logo_NidanPro.png" alt="NidanPro Logo" className="w-12 h-12" />
         </div>
-        <Link to="/" className="inline-block text-h1 font-bold text-text-primary mb-2 hover:text-primary transition-colors">
-          NidanPro
+        <Link to="/" className="inline-block text-h1 font-bold text-text-primary mb-2 hover:text-opacity-80 transition-colors">
+          <NidanProBrand className="text-h1" variant="text-only" />
         </Link>
         <p className="text-text-secondary">Digitize. Optimize. Deliver.</p>
       </div>

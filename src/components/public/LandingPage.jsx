@@ -13,6 +13,7 @@ import {
   Mail,
   Phone,
 } from 'lucide-react';
+import NidanProBrand from '../common/NidanProBrand';
 
 const features = [
   {
@@ -50,10 +51,8 @@ export default function LandingPage() {
       <header className="sticky top-0 z-40 h-16 border-b border-border bg-card/90 backdrop-blur">
         <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <a href="#home" className="flex items-center gap-2 font-semibold text-lg">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white">
-              <FlaskConical className="h-5 w-5" />
-            </span>
-            NidanPro
+            <img src="/logo_NidanPro.png" alt="NidanPro Logo" className="h-9 w-9" />
+            <NidanProBrand variant="text-only" />
           </a>
 
           <nav className="hidden items-center gap-6 text-sm font-medium text-text-secondary md:flex">
@@ -91,7 +90,7 @@ export default function LandingPage() {
                 Smarter Labs. Better Care.
               </h1>
               <p className="mx-auto mt-4 max-w-xl text-sm text-text-secondary sm:text-base lg:mx-0">
-                NidanPro is a modern pathology lab management platform designed to simplify
+                <NidanProBrand variant="text-only" /> is a modern pathology lab management platform designed to simplify
                 diagnostics, streamline workflows, and deliver accurate reports with speed and
                 precision.
               </p>
@@ -206,7 +205,7 @@ export default function LandingPage() {
           <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 to-secondary/10 p-7 text-center shadow-sm sm:p-10">
             <h2 className="text-2xl font-bold sm:text-3xl">Ready to Digitize Your Lab?</h2>
             <p className="mx-auto mt-2 max-w-2xl text-sm text-text-secondary sm:text-base">
-              Start using NidanPro to improve speed, consistency, and report delivery quality.
+              Start using <NidanProBrand variant="text-only" /> to improve speed, consistency, and report delivery quality.
             </p>
             <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
@@ -230,10 +229,8 @@ export default function LandingPage() {
         <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 px-4 py-10 sm:px-6 md:grid-cols-3 lg:px-8">
           <div>
             <div className="mb-3 flex items-center gap-2 text-lg font-semibold">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white">
-                <FlaskConical className="h-5 w-5" />
-              </span>
-              NidanPro
+              <img src="/logo_NidanPro.png" alt="NidanPro Logo" className="h-9 w-9" />
+              <NidanProBrand variant="text-only" />
             </div>
             <p className="text-sm text-text-secondary">
               A trusted pathology lab management platform for faster diagnostics and better
@@ -268,7 +265,7 @@ export default function LandingPage() {
         </div>
 
         <div className="border-t border-border px-4 py-4 text-center text-xs text-text-secondary sm:px-6 lg:px-8">
-          © 2026 NidanPro. All rights reserved.
+          © 2026 <NidanProBrand variant="text-only" />. All rights reserved.
         </div>
       </footer>
     </div>
