@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Shield, Mail, Lock } from 'lucide-react';
+import InlineLoader from '../common/InlineLoader';
 import { useAuth } from '../../context/AuthContext';
 import DesktopOnlyNotice from './DesktopOnlyNotice';
 import api from '../../api/axiosConfig';
@@ -137,9 +138,9 @@ export default function StaffLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full"
+              className="btn-primary w-full flex items-center justify-center gap-2"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? <InlineLoader size={20} /> : 'Sign In'}
             </button>
           </form>
         </div>

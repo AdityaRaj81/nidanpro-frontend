@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Save, Upload, Building, FileText, Signature } from 'lucide-react';
+import InlineLoader from '../common/InlineLoader';
 
 export default function Settings() {
   const [settings, setSettings] = useState({
@@ -223,10 +224,10 @@ export default function Settings() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="btn-primary flex items-center disabled:opacity-50"
+          className="btn-primary flex items-center disabled:opacity-50 gap-2"
         >
-          <Save className="w-5 h-5 mr-2" />
-          {saving ? 'Saving...' : 'Save Settings'}
+          <Save className="w-5 h-5" />
+          {saving ? <InlineLoader /> : 'Save Settings'}
         </button>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Loader from '../common/Loader';
 import { CalendarDays, FileCheck2, Plus, Receipt, Search, UserRound } from 'lucide-react';
+import InlineLoader from '../common/InlineLoader';
 import api from '../../api/axiosConfig';
 
 const initialPatientState = {
@@ -334,8 +335,8 @@ export default function Patients() {
               placeholder={searchHint}
               className="input-field"
             />
-            <button type="submit" className="btn-primary whitespace-nowrap" disabled={searchingPatient}>
-              {searchingPatient ? 'Searching...' : 'Find'}
+            <button type="submit" className="btn-primary whitespace-nowrap flex items-center justify-center gap-2" disabled={searchingPatient}>
+              {searchingPatient ? <InlineLoader /> : 'Find'}
             </button>
           </div>
         </form>
@@ -376,9 +377,9 @@ export default function Patients() {
             )}
           </div>
 
-          <button type="submit" className="btn-primary flex items-center" disabled={submitting || !selectedExistingPatient}>
-            <Receipt className="w-5 h-5 mr-2" />
-            {submitting ? 'Generating...' : 'Generate Receipts'}
+          <button type="submit" className="btn-primary flex items-center justify-center gap-2" disabled={submitting || !selectedExistingPatient}>
+            <Receipt className="w-5 h-5" />
+            {submitting ? <InlineLoader /> : 'Generate Receipts'}
           </button>
         </form>
       </div>
@@ -549,9 +550,9 @@ export default function Patients() {
             </div>
 
             <div className="flex gap-3">
-              <button type="submit" className="btn-primary flex items-center" disabled={submitting}>
-                <FileCheck2 className="w-5 h-5 mr-2" />
-                {submitting ? 'Saving...' : 'Save Patient & Generate Receipts'}
+              <button type="submit" className="btn-primary flex items-center justify-center gap-2" disabled={submitting}>
+                <FileCheck2 className="w-5 h-5" />
+                {submitting ? <InlineLoader /> : 'Save Patient & Generate Receipts'}
               </button>
               <button
                 type="button"

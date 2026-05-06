@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Phone, Shield, FileText } from 'lucide-react';
+import InlineLoader from '../common/InlineLoader';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axiosConfig';
 import NidanProBrand from '../common/NidanProBrand';
@@ -119,9 +120,9 @@ export default function PatientAccess() {
                 <button
                   onClick={handleSendOTP}
                   disabled={loading}
-                  className="btn-primary w-full"
+                  className="btn-primary w-full flex items-center justify-center gap-2"
                 >
-                  {loading ? 'Sending...' : 'Send OTP'}
+                  {loading ? <InlineLoader /> : 'Send OTP'}
                 </button>
               ) : (
                 <div className="space-y-4">
@@ -139,9 +140,9 @@ export default function PatientAccess() {
                   <button
                     onClick={handleVerifyOTP}
                     disabled={loading}
-                    className="btn-primary w-full"
+                    className="btn-primary w-full flex items-center justify-center gap-2"
                   >
-                    {loading ? 'Verifying...' : 'Verify & Login'}
+                    {loading ? <InlineLoader /> : 'Verify & Login'}
                   </button>
                   <button
                     onClick={() => {
