@@ -1,105 +1,248 @@
-import { useMemo, useState } from 'react';
-import { Search, Plus, Receipt, CalendarDays, FileCheck2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { CalendarDays, FileCheck2, Plus, Receipt, Search, UserRound } from 'lucide-react';
+import api from '../../api/axiosConfig';
+
+const initialPatientState = {
+  fullName: '',
+  phoneNumber: '',
+  dateOfBirth: '',
+  ageYears: '',
+  ageMonths: '0',
+  ageDays: '0',
+  gender: '',
+  address: '',
+};
+
+function calculateAgeBreakdown(dateOfBirth) {
+  if (!dateOfBirth) {
+    return { years: '', months: '', days: '' };
+  }
+
+  const today = new Date();
+  const dob = new Date(dateOfBirth);
+  if (Number.isNaN(dob.getTime()) || dob > today) {
+    return { years: '', months: '', days: '' };
+  }
+
+  let years = today.getFullYear() - dob.getFullYear();
+  let months = today.getMonth() - dob.getMonth();
+  let days = today.getDate() - dob.getDate();
+
+  if (days < 0) {
+    const previousMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    days += previousMonth.getDate();
+    months -= 1;
+  }
+
+  if (months < 0) {
+    months += 12;
+    years -= 1;
+  }
+
+  if (years < 0) {
+    return { years: '', months: '', days: '' };
+  }
+
+  return {
+    years: String(years),
+    months: String(months),
+    days: String(days),
+  };
+}
+
+function normalizeApiError(error) {
+  return (
+    error?.response?.data?.error ||
+    error?.response?.data?.message ||
+    error?.message ||
+    'Something went wrong. Please try again.'
+  );
+}
 
 export default function Patients() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [queryType, setQueryType] = useState('phone');
   const [queryValue, setQueryValue] = useState('');
-  const [selectedExistingReports, setSelectedExistingReports] = useState([]);
-  const [latestReceipt, setLatestReceipt] = useState(null);
+  const [searchingPatient, setSearchingPatient] = useState(false);
+  const [selectedExistingPatient, setSelectedExistingPatient] = useState(null);
+  const [selectedExistingTests, setSelectedExistingTests] = useState([]);
 
-  const [newPatient, setNewPatient] = useState({
-    name: '',
-    phone: '',
-    dob: '',
-    age: '',
-    gender: '',
-    address: ''
-  });
-  const [selectedNewReports, setSelectedNewReports] = useState([]);
+  const [ageInputMode, setAgeInputMode] = useState('dob');
+  const [newPatient, setNewPatient] = useState(initialPatientState);
+  const [selectedNewTests, setSelectedNewTests] = useState([]);
 
-  const reportTypes = useMemo(
-    () => [
-      'Complete Blood Count (CBC)',
-      'Lipid Profile',
-      'Thyroid Function Test',
-      'Liver Function Test',
-      'Kidney Function Test',
-      'Blood Sugar Panel',
-    ],
-    []
+  const [tests, setTests] = useState([]);
+  const [loadingTests, setLoadingTests] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [generatedReceipts, setGeneratedReceipts] = useState([]);
+
+  useEffect(() => {
+    const fetchTests = async () => {
+      try {
+        const response = await api.get('/tests');
+        const activeTests = (response.data || []).filter((test) => test.active !== false);
+        setTests(activeTests);
+      } catch (error) {
+        setErrorMessage(normalizeApiError(error));
+      } finally {
+        setLoadingTests(false);
+      }
+    };
+
+    fetchTests();
+  }, []);
+
+  const searchHint = useMemo(
+    () => (queryType === 'phone' ? 'Enter patient phone number' : 'Enter patient ID like P0001'),
+    [queryType]
   );
 
-  const calculateAge = (dob) => {
-    if (!dob) return '';
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let years = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      years -= 1;
-    }
-    return years >= 0 ? String(years) : '';
-  };
+  const autoAge = useMemo(
+    () => (ageInputMode === 'dob' ? calculateAgeBreakdown(newPatient.dateOfBirth) : { years: '', months: '', days: '' }),
+    [ageInputMode, newPatient.dateOfBirth]
+  );
 
-  const toggleReportSelection = (report, selectedList, setter) => {
-    if (selectedList.includes(report)) {
-      setter(selectedList.filter((item) => item !== report));
+  const toggleSelection = (id, list, setList) => {
+    if (list.includes(id)) {
+      setList(list.filter((item) => item !== id));
       return;
     }
-    setter([...selectedList, report]);
+    setList([...list, id]);
   };
 
-  const handleAddNewPatient = (e) => {
-    e.preventDefault();
+  const createPerTestReceipts = async (patient, testIds) => {
+    const requests = testIds.map((testId) =>
+      api.post('/receipts/generate', {
+        patientCode: patient.patientCode,
+        patientPhone: patient.phoneNumber,
+        patientName: patient.fullName,
+        testIds: [testId],
+      })
+    );
 
-    if (!newPatient.name || !newPatient.phone || !newPatient.dob || !newPatient.gender) {
-      alert('Please fill in all required fields');
-      return;
-    }
-    if (selectedNewReports.length === 0) {
-      alert('Please select at least one report type');
-      return;
-    }
-
-    const receipt = {
-      receiptId: `REC-${Date.now()}`,
-      generatedAt: new Date().toLocaleString(),
-      patientRef: 'To be assigned by backend',
-      patientName: newPatient.name,
-      selectedReports: selectedNewReports,
-      source: 'new',
-    };
-
-    setLatestReceipt(receipt);
-    setNewPatient({ name: '', phone: '', dob: '', age: '', gender: '', address: '' });
-    setSelectedNewReports([]);
+    const responses = await Promise.all(requests);
+    return responses.map((response) => response.data);
   };
 
-  const handleGenerateExistingReceipt = (e) => {
-    e.preventDefault();
+  const handleFindPatient = async (event) => {
+    event.preventDefault();
+    setErrorMessage('');
+    setSelectedExistingPatient(null);
+    setGeneratedReceipts([]);
 
     if (!queryValue.trim()) {
-      alert(`Please enter patient ${queryType === 'phone' ? 'phone number' : 'ID'}`);
-      return;
-    }
-    if (selectedExistingReports.length === 0) {
-      alert('Please select at least one report type');
+      setErrorMessage(`Please enter patient ${queryType === 'phone' ? 'phone number' : 'ID'}.`);
       return;
     }
 
-    const receipt = {
-      receiptId: `REC-${Date.now()}`,
-      generatedAt: new Date().toLocaleString(),
-      patientRef: queryValue,
-      patientName: 'Fetched from backend',
-      selectedReports: selectedExistingReports,
-      source: 'existing',
-      queryType,
+    setSearchingPatient(true);
+    try {
+      if (queryType === 'phone') {
+        const response = await api.get('/patients/search', { params: { phone: queryValue.trim() } });
+        const found = response.data?.[0];
+        if (!found) {
+          setErrorMessage('No patient found with this phone number.');
+          return;
+        }
+        setSelectedExistingPatient(found);
+      } else {
+        const response = await api.get('/patients/by-code', { params: { code: queryValue.trim() } });
+        setSelectedExistingPatient(response.data || null);
+      }
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        setErrorMessage('No patient found with this ID.');
+      } else {
+        setErrorMessage(normalizeApiError(error));
+      }
+    } finally {
+      setSearchingPatient(false);
+    }
+  };
+
+  const handleGenerateExistingReceipts = async (event) => {
+    event.preventDefault();
+    setErrorMessage('');
+    setGeneratedReceipts([]);
+
+    if (!selectedExistingPatient) {
+      setErrorMessage('Search and select a patient first.');
+      return;
+    }
+
+    if (selectedExistingTests.length === 0) {
+      setErrorMessage('Select at least one test to generate receipts.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const receipts = await createPerTestReceipts(selectedExistingPatient, selectedExistingTests);
+      setGeneratedReceipts(receipts);
+      setSelectedExistingTests([]);
+    } catch (error) {
+      setErrorMessage(normalizeApiError(error));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreatePatientAndReceipts = async (event) => {
+    event.preventDefault();
+    setErrorMessage('');
+    setGeneratedReceipts([]);
+
+    if (!newPatient.fullName || !newPatient.phoneNumber || !newPatient.gender) {
+      setErrorMessage('Name, phone, and gender are required.');
+      return;
+    }
+
+    if (ageInputMode === 'dob' && !newPatient.dateOfBirth) {
+      setErrorMessage('Please select date of birth.');
+      return;
+    }
+
+    if (ageInputMode === 'manual' && (newPatient.ageYears === '' || Number(newPatient.ageYears) < 0)) {
+      setErrorMessage('Please enter a valid age in years.');
+      return;
+    }
+
+    if (selectedNewTests.length === 0) {
+      setErrorMessage('Select at least one test.');
+      return;
+    }
+
+    const payload = {
+      fullName: newPatient.fullName.trim(),
+      phoneNumber: newPatient.phoneNumber.trim(),
+      dateOfBirth: ageInputMode === 'dob' ? newPatient.dateOfBirth : null,
+      ageYears: ageInputMode === 'dob' ? null : Number(newPatient.ageYears),
+      ageMonths: ageInputMode === 'dob' ? null : Number(newPatient.ageMonths || 0),
+      ageDays: ageInputMode === 'dob' ? null : Number(newPatient.ageDays || 0),
+      gender: newPatient.gender,
+      address: newPatient.address?.trim() || null,
     };
 
-    setLatestReceipt(receipt);
-    setSelectedExistingReports([]);
+    setSubmitting(true);
+    try {
+      const patientResponse = await api.post('/patients', payload);
+      const createdPatient = patientResponse.data;
+      const receipts = await createPerTestReceipts(createdPatient, selectedNewTests);
+
+      setGeneratedReceipts(receipts);
+      setSelectedNewTests([]);
+      setNewPatient(initialPatientState);
+      setAgeInputMode('dob');
+      setShowAddForm(false);
+      setSelectedExistingPatient(createdPatient);
+      setQueryType('patientId');
+      setQueryValue(createdPatient.patientCode || '');
+    } catch (error) {
+      setErrorMessage(normalizeApiError(error));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -107,7 +250,7 @@ export default function Patients() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-h1 font-bold text-text-primary">Patients</h1>
-          <p className="text-text-secondary">Backend-ready patient intake, report selection, and receipt generation.</p>
+          <p className="text-text-secondary">Create patient, assign tests, and generate one receipt per selected test.</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
@@ -118,81 +261,107 @@ export default function Patients() {
         </button>
       </div>
 
-      <div className="card p-6">
-        <div className="flex items-center mb-4">
-          <Search className="w-5 h-5 text-primary mr-2" />
-          <h2 className="text-h3 font-semibold">Existing Patient Search</h2>
+      {errorMessage && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {errorMessage}
         </div>
-        <form onSubmit={handleGenerateExistingReceipt} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Search By</label>
-              <select
-                value={queryType}
-                onChange={(e) => setQueryType(e.target.value)}
-                className="input-field"
-              >
-                <option value="phone">Phone Number</option>
-                <option value="patientId">Patient ID</option>
-              </select>
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-2">
-                {queryType === 'phone' ? 'Phone Number' : 'Patient ID'}
-              </label>
-              <input
-                type="text"
-                value={queryValue}
-                onChange={(e) => setQueryValue(e.target.value)}
-                placeholder={queryType === 'phone' ? 'Enter patient phone number' : 'Enter patient ID'}
-                className="input-field"
-              />
-            </div>
-          </div>
+      )}
 
+      <div className="card p-6 space-y-4">
+        <div className="flex items-center mb-1">
+          <Search className="w-5 h-5 text-primary mr-2" />
+          <h2 className="text-h3 font-semibold">Existing Patient</h2>
+        </div>
+
+        <form onSubmit={handleFindPatient} className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <p className="text-sm font-medium mb-3">Select Required Reports</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {reportTypes.map((report) => (
-                <label key={report} className="flex items-center gap-2 rounded-lg border border-border p-3 cursor-pointer hover:bg-slate-50">
-                  <input
-                    type="checkbox"
-                    checked={selectedExistingReports.includes(report)}
-                    onChange={() => toggleReportSelection(report, selectedExistingReports, setSelectedExistingReports)}
-                  />
-                  <span className="text-sm text-text-primary">{report}</span>
-                </label>
-              ))}
+            <label className="block text-sm font-medium mb-2">Search By</label>
+            <select
+              value={queryType}
+              onChange={(event) => setQueryType(event.target.value)}
+              className="input-field"
+            >
+              <option value="phone">Phone Number</option>
+              <option value="patientId">Patient ID</option>
+            </select>
+          </div>
+          <div className="md:col-span-2 flex gap-3">
+            <input
+              type="text"
+              value={queryValue}
+              onChange={(event) => setQueryValue(event.target.value)}
+              placeholder={searchHint}
+              className="input-field"
+            />
+            <button type="submit" className="btn-primary whitespace-nowrap" disabled={searchingPatient}>
+              {searchingPatient ? 'Searching...' : 'Find'}
+            </button>
+          </div>
+        </form>
+
+        {selectedExistingPatient && (
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-semibold text-text-primary">{selectedExistingPatient.fullName}</p>
+                <p className="text-sm text-text-secondary">ID: {selectedExistingPatient.patientCode}</p>
+                <p className="text-sm text-text-secondary">Phone: {selectedExistingPatient.phoneNumber}</p>
+              </div>
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-primary border border-primary/20">
+                Existing Patient
+              </span>
             </div>
           </div>
+        )}
 
-          <button type="submit" className="btn-primary flex items-center">
+        <form onSubmit={handleGenerateExistingReceipts} className="space-y-4">
+          <div>
+            <p className="text-sm font-medium mb-3">Select Tests (Each test creates a separate receipt)</p>
+            {loadingTests ? (
+              <p className="text-sm text-text-secondary">Loading tests...</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {tests.map((test) => (
+                  <label key={test.id} className="flex items-center gap-2 rounded-lg border border-border p-3 cursor-pointer hover:bg-slate-50">
+                    <input
+                      type="checkbox"
+                      checked={selectedExistingTests.includes(test.id)}
+                      onChange={() => toggleSelection(test.id, selectedExistingTests, setSelectedExistingTests)}
+                    />
+                    <span className="text-sm text-text-primary">{test.testName}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button type="submit" className="btn-primary flex items-center" disabled={submitting || !selectedExistingPatient}>
             <Receipt className="w-5 h-5 mr-2" />
-            Generate Receipt for Existing Patient
+            {submitting ? 'Generating...' : 'Generate Receipts'}
           </button>
         </form>
       </div>
 
       {showAddForm && (
-        <div className="card p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="card p-6 space-y-5">
+          <div className="flex items-center justify-between">
             <h2 className="text-h3 font-semibold">New Patient Intake</h2>
             <button
               onClick={() => setShowAddForm(false)}
-              className="text-text-secondary hover:text-text-primary"
+              className="rounded-lg border border-border px-3 py-1 text-text-secondary hover:text-text-primary"
             >
-              X
+              Close
             </button>
           </div>
 
-          <form onSubmit={handleAddNewPatient} className="space-y-4">
+          <form onSubmit={handleCreatePatientAndReceipts} className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Full Name *</label>
                 <input
                   type="text"
-                  value={newPatient.name}
-                  onChange={(e) => setNewPatient({ ...newPatient, name: e.target.value })}
+                  value={newPatient.fullName}
+                  onChange={(event) => setNewPatient((prev) => ({ ...prev, fullName: event.target.value }))}
                   className="input-field"
                   required
                 />
@@ -201,49 +370,24 @@ export default function Patients() {
                 <label className="block text-sm font-medium mb-2">Phone Number *</label>
                 <input
                   type="tel"
-                  value={newPatient.phone}
-                  onChange={(e) => setNewPatient({ ...newPatient, phone: e.target.value })}
+                  value={newPatient.phoneNumber}
+                  onChange={(event) => setNewPatient((prev) => ({ ...prev, phoneNumber: event.target.value }))}
                   className="input-field"
                   required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Date of Birth *</label>
-                <div className="relative">
-                  <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
-                  <input
-                    type="date"
-                    value={newPatient.dob}
-                    onChange={(e) => {
-                      const dob = e.target.value;
-                      setNewPatient({ ...newPatient, dob, age: calculateAge(dob) });
-                    }}
-                    className="input-field pl-10"
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Age (Auto Calculated)</label>
-                <input
-                  type="text"
-                  value={newPatient.age}
-                  className="input-field bg-gray-50"
-                  readOnly
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Gender *</label>
                 <select
                   value={newPatient.gender}
-                  onChange={(e) => setNewPatient({ ...newPatient, gender: e.target.value })}
+                  onChange={(event) => setNewPatient((prev) => ({ ...prev, gender: event.target.value }))}
                   className="input-field"
                   required
                 >
                   <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
                 </select>
               </div>
               <div>
@@ -251,32 +395,122 @@ export default function Patients() {
                 <input
                   type="text"
                   value={newPatient.address}
-                  onChange={(e) => setNewPatient({ ...newPatient, address: e.target.value })}
+                  onChange={(event) => setNewPatient((prev) => ({ ...prev, address: event.target.value }))}
                   className="input-field"
                 />
               </div>
             </div>
 
-            <div>
-              <p className="text-sm font-medium mb-3">Select Required Reports *</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {reportTypes.map((report) => (
-                  <label key={report} className="flex items-center gap-2 rounded-lg border border-border p-3 cursor-pointer hover:bg-slate-50">
-                    <input
-                      type="checkbox"
-                      checked={selectedNewReports.includes(report)}
-                      onChange={() => toggleReportSelection(report, selectedNewReports, setSelectedNewReports)}
-                    />
-                    <span className="text-sm text-text-primary">{report}</span>
-                  </label>
-                ))}
+            <div className="rounded-xl border border-border p-4 space-y-4 bg-slate-50/50">
+              <p className="text-sm font-semibold text-text-primary">Age Input</p>
+              <div className="flex flex-wrap gap-3">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    checked={ageInputMode === 'dob'}
+                    onChange={() => setAgeInputMode('dob')}
+                  />
+                  Use Date of Birth
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    checked={ageInputMode === 'manual'}
+                    onChange={() => setAgeInputMode('manual')}
+                  />
+                  Enter Age Manually
+                </label>
               </div>
+
+              {ageInputMode === 'dob' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Date of Birth *</label>
+                    <div className="relative">
+                      <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+                      <input
+                        type="date"
+                        value={newPatient.dateOfBirth}
+                        max={new Date().toISOString().split('T')[0]}
+                        onChange={(event) => setNewPatient((prev) => ({ ...prev, dateOfBirth: event.target.value }))}
+                        className="input-field pl-10"
+                        required={ageInputMode === 'dob'}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Calculated Age (Today)</label>
+                    <div className="input-field bg-white flex items-center gap-2">
+                      <UserRound className="w-4 h-4 text-text-secondary" />
+                      <span>
+                        {autoAge.years === '' ? 'Select DOB' : `${autoAge.years}y ${autoAge.months}m ${autoAge.days}d`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Age (Years) *</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newPatient.ageYears}
+                      onChange={(event) => setNewPatient((prev) => ({ ...prev, ageYears: event.target.value }))}
+                      className="input-field"
+                      required={ageInputMode === 'manual'}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Months (Optional)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="11"
+                      value={newPatient.ageMonths}
+                      onChange={(event) => setNewPatient((prev) => ({ ...prev, ageMonths: event.target.value }))}
+                      className="input-field"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Days (Optional)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="31"
+                      value={newPatient.ageDays}
+                      onChange={(event) => setNewPatient((prev) => ({ ...prev, ageDays: event.target.value }))}
+                      className="input-field"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <p className="text-sm font-medium mb-3">Select Tests (Each test creates a separate receipt) *</p>
+              {loadingTests ? (
+                <p className="text-sm text-text-secondary">Loading tests...</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {tests.map((test) => (
+                    <label key={test.id} className="flex items-center gap-2 rounded-lg border border-border p-3 cursor-pointer hover:bg-slate-50">
+                      <input
+                        type="checkbox"
+                        checked={selectedNewTests.includes(test.id)}
+                        onChange={() => toggleSelection(test.id, selectedNewTests, setSelectedNewTests)}
+                      />
+                      <span className="text-sm text-text-primary">{test.testName}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3">
-              <button type="submit" className="btn-primary flex items-center">
+              <button type="submit" className="btn-primary flex items-center" disabled={submitting}>
                 <FileCheck2 className="w-5 h-5 mr-2" />
-                Save Intake & Generate Receipt
+                {submitting ? 'Saving...' : 'Save Patient & Generate Receipts'}
               </button>
               <button
                 type="button"
@@ -290,41 +524,23 @@ export default function Patients() {
         </div>
       )}
 
-      {latestReceipt && (
+      {generatedReceipts.length > 0 && (
         <div className="card p-6">
           <div className="flex items-center mb-4">
             <Receipt className="w-5 h-5 text-primary mr-2" />
-            <h2 className="text-h3 font-semibold">Auto Generated Receipt</h2>
+            <h2 className="text-h3 font-semibold">Generated Receipts ({generatedReceipts.length})</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-            <div className="rounded-lg border border-border p-3">
-              <p className="text-text-secondary">Receipt ID</p>
-              <p className="font-medium text-text-primary">{latestReceipt.receiptId}</p>
-            </div>
-            <div className="rounded-lg border border-border p-3">
-              <p className="text-text-secondary">Generated At</p>
-              <p className="font-medium text-text-primary">{latestReceipt.generatedAt}</p>
-            </div>
-            <div className="rounded-lg border border-border p-3">
-              <p className="text-text-secondary">Patient Reference</p>
-              <p className="font-medium text-text-primary">{latestReceipt.patientRef}</p>
-            </div>
-            <div className="rounded-lg border border-border p-3">
-              <p className="text-text-secondary">Patient Name</p>
-              <p className="font-medium text-text-primary">{latestReceipt.patientName}</p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {generatedReceipts.map((receipt) => (
+              <div key={receipt.receiptCode} className="rounded-xl border border-border p-4 space-y-2">
+                <p className="text-xs uppercase text-text-secondary">Receipt Number</p>
+                <p className="font-semibold text-text-primary">{receipt.receiptCode}</p>
+                <p className="text-sm text-text-secondary">Patient ID: {receipt.patientRef}</p>
+                <p className="text-sm text-text-secondary">Patient Name: {receipt.patientName}</p>
+                <p className="text-sm text-text-secondary">Test: {receipt.tests?.[0] || 'N/A'}</p>
+              </div>
+            ))}
           </div>
-          <div className="mt-4 rounded-lg border border-border p-3">
-            <p className="text-text-secondary text-sm mb-2">Requested Reports</p>
-            <ul className="space-y-1">
-              {latestReceipt.selectedReports.map((report) => (
-                <li key={report} className="text-sm text-text-primary">- {report}</li>
-              ))}
-            </ul>
-          </div>
-          <p className="text-xs text-text-secondary mt-3">
-            Final amount, patient ID, and report codes will be injected from backend response.
-          </p>
         </div>
       )}
     </div>
