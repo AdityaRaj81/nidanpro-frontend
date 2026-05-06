@@ -485,8 +485,8 @@ export default function TestManagement() {
                   <p className="text-xs text-text-secondary font-medium uppercase">Status</p>
                   <div className="mt-2">
                     <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${selectedTest.active
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
                       }`}>
                       {selectedTest.active ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
                       {selectedTest.active ? 'Active' : 'Inactive'}
@@ -591,16 +591,25 @@ export default function TestManagement() {
               </div>
 
               {/* Close Button */}
-              <button
-                onClick={() => {
-                  setShowDetailsModal(false);
-                  setSelectedTest(null);
-                  setTestParameters([]);
-                }}
-                className="w-full px-6 py-3 border-2 border-gray-300 text-text-primary font-semibold rounded-lg hover:bg-gray-50 transition-all"
-              >
-                Close
-              </button>
+              <div className="flex gap-3 pt-6 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    setSelectedTest(null);
+                    setTestParameters([]);
+                  }}
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-text-primary font-semibold rounded-lg hover:bg-gray-50 transition-all"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => handleEditFormOpen(selectedTest)}
+                  className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-6 py-3 font-semibold rounded-lg transition-all flex items-center justify-center gap-2"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit Test
+                </button>
+              </div>
             </div>
           </div>
         </div>
