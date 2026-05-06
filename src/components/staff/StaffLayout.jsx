@@ -177,6 +177,18 @@ export default function StaffLayout() {
 
             {/* Right side */}
             <div className="flex items-center space-x-4 ml-4">
+              {role === 'SUPER_ADMIN' && (
+                <div>
+                  <button
+                    onClick={() => navigate('/staff/patients?all=true')}
+                    className="px-4 py-2 rounded-lg border border-primary text-primary bg-white hover:bg-primary/5 transition-colors"
+                    title="Show all patients"
+                  >
+                    Show All Patients
+                  </button>
+                </div>
+              )}
+
               <div className="relative">
                 <button
                   onClick={() => setNotificationOpen((prev) => !prev)}

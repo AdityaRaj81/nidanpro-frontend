@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, Loader2, Edit2, Eye, X, Save, Search, AlertCircle, CheckCircle2, FlaskConical, ShieldAlert } from 'lucide-react';
+import { Plus, Edit2, Eye, X, Save, Search, AlertCircle, CheckCircle2, FlaskConical, ShieldAlert } from 'lucide-react';
 import api from '../../api/axiosConfig';
+import Loader from '../common/Loader';
 import { useAuth } from '../../context/AuthContext';
 
 export default function TestManagement() {
@@ -246,24 +247,7 @@ export default function TestManagement() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center space-y-4">
-          <div className="flex justify-center">
-            <div className="relative w-16 h-16">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-green-500 rounded-full animate-spin opacity-20"></div>
-              <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            </div>
-          </div>
-          <div>
-            <p className="text-lg font-semibold text-text-primary">Loading tests...</p>
-            <p className="text-sm text-text-secondary mt-1">Please wait while we fetch your test catalog</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loader message="Loading tests..." />;
   }
 
   return (
@@ -271,7 +255,7 @@ export default function TestManagement() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-h1 font-bold bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent">Test Management</h1>
+          <h1 className="text-h1 font-bold text-text-primary">Test Management</h1>
           <p className="text-text-secondary">Manage your laboratory test catalog and parameters</p>
         </div>
         <button
@@ -280,7 +264,7 @@ export default function TestManagement() {
             setEditingId(null);
             setShowAddForm(true);
           }}
-          className="bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-primary text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+          className="btn-primary flex items-center gap-2"
         >
           <Plus className="w-5 h-5" />
           Add New Test
@@ -464,9 +448,9 @@ export default function TestManagement() {
                   </div>
 
                   {/* Price */}
-                  <div className="bg-gradient-to-r from-primary to-blue-600 bg-opacity-10 p-3 rounded-lg border border-primary border-opacity-20">
+                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                     <p className="text-xs text-text-secondary font-medium">Price</p>
-                    <p className="text-2xl font-bold text-primary">₹{parseFloat(test.price).toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-text-primary">₹{parseFloat(test.price).toFixed(2)}</p>
                   </div>
 
                   {/* Metadata */}
@@ -580,16 +564,13 @@ export default function TestManagement() {
                 </div>
 
                 {parametersLoading ? (
-                  <div className="text-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary mb-2" />
-                    <p className="text-sm text-text-secondary">Loading parameters...</p>
-                  </div>
+                  <Loader message="Loading parameters..." />
                 ) : testParameters.length === 0 ? (
                   <p className="text-sm text-text-secondary bg-gray-50 p-4 rounded-lg text-center">No parameters added yet</p>
                 ) : (
                   <div className="space-y-2">
                     {testParameters.map((param, idx) => (
-                      <div key={param.id} className="bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-200 hover:border-primary transition-colors">
+                      <div key={param.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-primary transition-colors">
                         <div className="flex items-start gap-3">
                           <span className="text-xs font-bold w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center flex-shrink-0">{idx + 1}</span>
                           <div className="flex-1">

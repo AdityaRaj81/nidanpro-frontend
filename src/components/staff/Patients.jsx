@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import Loader from '../common/Loader';
 import { CalendarDays, FileCheck2, Plus, Receipt, Search, UserRound } from 'lucide-react';
 import api from '../../api/axiosConfig';
 
@@ -73,6 +75,10 @@ export default function Patients() {
 
   const [tests, setTests] = useState([]);
   const [loadingTests, setLoadingTests] = useState(true);
+  const [searchParams] = useSearchParams();
+  const showAllPatients = searchParams.get('all') === 'true';
+  const [allPatients, setAllPatients] = useState([]);
+  const [loadingAllPatients, setLoadingAllPatients] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [generatedReceipts, setGeneratedReceipts] = useState([]);
@@ -92,6 +98,22 @@ export default function Patients() {
 
     fetchTests();
   }, []);
+
+  useEffect(() => {
+    if (!showAllPatients) return;
+    const fetchAll = async () => {
+      setLoadingAllPatients(true);
+      try {
+        const resp = await api.get('/patients');
+        setAllPatients(resp.data || []);
+      } catch (err) {
+        setErrorMessage(normalizeApiError(err));
+      } finally {
+        setLoadingAllPatients(false);
+      }
+    };
+    fetchAll();
+  }, [showAllPatients]);
 
   const searchHint = useMemo(
     () => (queryType === 'phone' ? 'Enter patient phone number' : 'Enter patient ID like P0001'),
@@ -261,6 +283,25 @@ export default function Patients() {
         </button>
       </div>
 
+      {showAllPatients && (
+        <div className="card p-6">
+          <h2 className="text-h3 font-semibold mb-4">All Patients</h2>
+          {loadingAllPatients ? (
+            <Loader message="Loading patients..." />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {allPatients.map((p) => (
+                <div key={p.id} className="rounded-xl border border-border p-4">
+                  <p className="font-semibold text-text-primary">{p.fullName}</p>
+                  <p className="text-sm text-text-secondary">ID: {p.patientCode}</p>
+                  <p className="text-sm text-text-secondary">Phone: {p.phoneNumber}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {errorMessage && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {errorMessage}
@@ -318,7 +359,7 @@ export default function Patients() {
           <div>
             <p className="text-sm font-medium mb-3">Select Tests (Each test creates a separate receipt)</p>
             {loadingTests ? (
-              <p className="text-sm text-text-secondary">Loading tests...</p>
+              <Loader message="Loading tests..." />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {tests.map((test) => (
@@ -490,7 +531,7 @@ export default function Patients() {
             <div>
               <p className="text-sm font-medium mb-3">Select Tests (Each test creates a separate receipt) *</p>
               {loadingTests ? (
-                <p className="text-sm text-text-secondary">Loading tests...</p>
+                <Loader message="Loading tests..." />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {tests.map((test) => (

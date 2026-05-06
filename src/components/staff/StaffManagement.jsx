@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, User, Loader as LoaderIcon, Mail, Phone, Badge, CheckCircle2, AlertCircle, X, Save } from 'lucide-react';
+import { Plus, User, Mail, Phone, Badge, CheckCircle2, AlertCircle, X, Save } from 'lucide-react';
+import Loader from '../common/Loader';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axiosConfig';
 
@@ -244,14 +245,9 @@ export default function StaffManagement() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-text-primary">👥 All Staff Members ({staff.length})</h2>
         </div>
-        
+
         {loading ? (
-          <div className="card p-12 text-center space-y-4">
-            <div className="flex justify-center">
-              <LoaderIcon className="w-8 h-8 animate-spin text-primary" />
-            </div>
-            <p className="text-text-secondary">Loading staff members...</p>
-          </div>
+          <Loader message="Loading staff members..." />
         ) : staff.length === 0 ? (
           <div className="card p-12 text-center space-y-4">
             <div className="flex justify-center">
@@ -290,7 +286,7 @@ export default function StaffManagement() {
                     </div>
 
                     {/* Role Badge */}
-                    <div className={`bg-gradient-to-r ${roleConfig.color} bg-opacity-10 p-3 rounded-lg border border-opacity-20`} style={{borderColor: `var(--color-${roleConfig.color.split('-')[1]})`}}>
+                    <div className={`bg-gradient-to-r ${roleConfig.color} bg-opacity-10 p-3 rounded-lg border border-opacity-20`} style={{ borderColor: `var(--color-${roleConfig.color.split('-')[1]})` }}>
                       <p className="text-xs text-text-secondary font-medium uppercase">Role</p>
                       <p className="text-sm font-bold text-text-primary mt-1 capitalize">{roleConfig.label}</p>
                       <p className="text-xs text-text-secondary mt-1">{roleConfig.description}</p>
