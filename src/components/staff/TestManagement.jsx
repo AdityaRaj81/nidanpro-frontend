@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Plus, Loader2, Edit2, Eye, X, Save, Search, AlertCircle, CheckCircle2, FlaskConical } from 'lucide-react';
+import { Plus, Loader2, Edit2, Eye, X, Save, Search, AlertCircle, CheckCircle2, FlaskConical, ShieldAlert } from 'lucide-react';
 import api from '../../api/axiosConfig';
+import { useAuth } from '../../context/AuthContext';
 
 export default function TestManagement() {
+  const { staffAuth } = useAuth();
+  const role = staffAuth?.role?.toUpperCase();
+  const isSuperAdmin = role === 'SUPER_ADMIN';
+
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -25,6 +30,9 @@ export default function TestManagement() {
   const [newParameter, setNewParameter] = useState({
     parameterName: '',
     unit: '',
+    rangeRuleType: 'BETWEEN',
+    lowerBound: '',
+    upperBound: '',
     referenceRange: ''
   });
 
@@ -124,8 +132,29 @@ export default function TestManagement() {
   };
 
   const handleAddParameter = async () => {
-    if (!selectedTest || !newParameter.parameterName.trim() || !newParameter.unit.trim() || !newParameter.referenceRange.trim()) {
+    if (!selectedTest || !newParameter.parameterName.trim() || !newParameter.unit.trim()) {
       alert('Please fill in all parameter fields');
+      return;
+    }
+
+    const requiresLower = ['BETWEEN', 'GREATER_THAN', 'GREATER_THAN_OR_EQUAL'].includes(newParameter.rangeRuleType);
+    const requiresUpper = ['BETWEEN', 'LESS_THAN', 'LESS_THAN_OR_EQUAL'].includes(newParameter.rangeRuleType);
+    const isCustom = newParameter.rangeRuleType === 'CUSTOM_TEXT';
+
+    if (requiresLower && newParameter.lowerBound === '') {
+      alert('Please enter a lower value.');
+      return;
+    }
+    if (requiresUpper && newParameter.upperBound === '') {
+      alert('Please enter an upper value.');
+      return;
+    }
+    if (newParameter.rangeRuleType === 'BETWEEN' && Number(newParameter.lowerBound) > Number(newParameter.upperBound)) {
+      alert('Lower value cannot be greater than upper value.');
+      return;
+    }
+    if (isCustom && !newParameter.referenceRange.trim()) {
+      alert('Please add custom reference text.');
       return;
     }
 
@@ -133,11 +162,14 @@ export default function TestManagement() {
       const response = await api.post(`/tests/${selectedTest.id}/parameters`, {
         parameterName: newParameter.parameterName,
         unit: newParameter.unit,
-        referenceRange: newParameter.referenceRange
+        rangeRuleType: newParameter.rangeRuleType,
+        lowerBound: newParameter.lowerBound === '' ? null : Number(newParameter.lowerBound),
+        upperBound: newParameter.upperBound === '' ? null : Number(newParameter.upperBound),
+        referenceRange: newParameter.referenceRange || null
       });
 
       setTestParameters([...testParameters, response.data]);
-      setNewParameter({ parameterName: '', unit: '', referenceRange: '' });
+      setNewParameter({ parameterName: '', unit: '', rangeRuleType: 'BETWEEN', lowerBound: '', upperBound: '', referenceRange: '' });
       alert('Parameter added successfully!');
     } catch (err) {
       console.error('Failed to add parameter:', err);
@@ -171,7 +203,7 @@ export default function TestManagement() {
       price: '',
       active: true
     });
-    setNewParameter({ parameterName: '', unit: '', referenceRange: '' });
+    setNewParameter({ parameterName: '', unit: '', rangeRuleType: 'BETWEEN', lowerBound: '', upperBound: '', referenceRange: '' });
   };
 
   const formatDate = (dateString) => {
@@ -184,6 +216,34 @@ export default function TestManagement() {
     test.testCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
     test.testName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const formatRangeBadge = (param) => {
+    const type = param.rangeRuleType || 'BETWEEN';
+    if (type === 'BETWEEN') return `${param.lowerBound} - ${param.upperBound}`;
+    if (type === 'LESS_THAN') return `< ${param.upperBound}`;
+    if (type === 'LESS_THAN_OR_EQUAL') return `<= ${param.upperBound}`;
+    if (type === 'GREATER_THAN') return `> ${param.lowerBound}`;
+    if (type === 'GREATER_THAN_OR_EQUAL') return `>= ${param.lowerBound}`;
+    return param.referenceRange || 'Custom';
+  };
+
+  if (!isSuperAdmin) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-h1 font-bold text-text-primary">Test Management</h1>
+          <p className="text-text-secondary">Restricted Area</p>
+        </div>
+        <div className="card p-10 text-center border-l-4 border-red-500">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+            <ShieldAlert className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-xl font-bold text-text-primary">Restricted Area</h2>
+          <p className="text-text-secondary mt-2">Only Super Admin can access the test management section.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -541,7 +601,7 @@ export default function TestManagement() {
                               </div>
                               <div>
                                 <span className="text-text-secondary font-medium">Range:</span>
-                                <span className="ml-2 text-text-primary bg-white px-2 py-1 rounded border border-gray-200">{param.referenceRange}</span>
+                                <span className="ml-2 text-text-primary bg-white px-2 py-1 rounded border border-gray-200">{formatRangeBadge(param)}</span>
                               </div>
                             </div>
                           </div>
@@ -572,13 +632,53 @@ export default function TestManagement() {
                       onChange={(e) => setNewParameter({ ...newParameter, unit: e.target.value })}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     />
-                    <input
-                      type="text"
-                      placeholder="Reference Range (e.g., 12-16 g/dL, 4.5-11.0)"
-                      value={newParameter.referenceRange}
-                      onChange={(e) => setNewParameter({ ...newParameter, referenceRange: e.target.value })}
+                    <select
+                      value={newParameter.rangeRuleType}
+                      onChange={(e) => setNewParameter({ ...newParameter, rangeRuleType: e.target.value, lowerBound: '', upperBound: '', referenceRange: '' })}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                    />
+                    >
+                      <option value="BETWEEN">Between (Lowest to Highest)</option>
+                      <option value="LESS_THAN">Less Than (&lt; value)</option>
+                      <option value="LESS_THAN_OR_EQUAL">Less Than or Equal (&lt;= value)</option>
+                      <option value="GREATER_THAN">Greater Than (&gt; value)</option>
+                      <option value="GREATER_THAN_OR_EQUAL">Greater Than or Equal (&gt;= value)</option>
+                      <option value="CUSTOM_TEXT">Custom Text</option>
+                    </select>
+
+                    {newParameter.rangeRuleType !== 'CUSTOM_TEXT' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {['BETWEEN', 'GREATER_THAN', 'GREATER_THAN_OR_EQUAL'].includes(newParameter.rangeRuleType) && (
+                          <input
+                            type="number"
+                            step="0.0001"
+                            placeholder="Lowest Value"
+                            value={newParameter.lowerBound}
+                            onChange={(e) => setNewParameter({ ...newParameter, lowerBound: e.target.value })}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                          />
+                        )}
+                        {['BETWEEN', 'LESS_THAN', 'LESS_THAN_OR_EQUAL'].includes(newParameter.rangeRuleType) && (
+                          <input
+                            type="number"
+                            step="0.0001"
+                            placeholder="Highest Value"
+                            value={newParameter.upperBound}
+                            onChange={(e) => setNewParameter({ ...newParameter, upperBound: e.target.value })}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                          />
+                        )}
+                      </div>
+                    )}
+
+                    {newParameter.rangeRuleType === 'CUSTOM_TEXT' && (
+                      <input
+                        type="text"
+                        placeholder="Reference text (e.g., Non-reactive, Negative)"
+                        value={newParameter.referenceRange}
+                        onChange={(e) => setNewParameter({ ...newParameter, referenceRange: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      />
+                    )}
                     <button
                       onClick={handleAddParameter}
                       className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-primary text-white py-2.5 rounded-lg font-semibold transition-all hover:shadow-lg flex items-center justify-center gap-2"

@@ -66,7 +66,7 @@ export default function StaffLayout() {
   if (isAdmin || role === 'PATHOLOGIST') {
     menuItems.push({ path: '/staff/reports', icon: FileText, label: 'Reports', badge: null });
   }
-  if (isAdmin || role === 'TECHNICIAN') {
+  if (role === 'SUPER_ADMIN') {
     menuItems.push({ path: '/staff/tests', icon: TestTube, label: 'Tests', badge: null });
   }
   if (isAdmin) {

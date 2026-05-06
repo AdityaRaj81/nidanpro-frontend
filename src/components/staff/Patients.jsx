@@ -80,7 +80,7 @@ export default function Patients() {
   useEffect(() => {
     const fetchTests = async () => {
       try {
-        const response = await api.get('/tests');
+        const response = await api.get('/tests/active');
         const activeTests = (response.data || []).filter((test) => test.active !== false);
         setTests(activeTests);
       } catch (error) {

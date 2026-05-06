@@ -8,7 +8,7 @@ export default function CreateReport() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const [patients, setPatients] = useState([]);
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +21,7 @@ export default function CreateReport() {
       try {
         const [patientsRes, testsRes] = await Promise.all([
           api.get('/patients'),
-          api.get('/tests')
+          api.get('/tests/active')
         ]);
         setPatients(patientsRes.data || []);
         setTests(testsRes.data || []);
@@ -34,9 +34,9 @@ export default function CreateReport() {
     fetchData();
   }, []);
 
-  const filteredPatients = patients.filter(p => 
-    p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.phone?.includes(searchTerm) || 
+  const filteredPatients = patients.filter(p =>
+    p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.phone?.includes(searchTerm) ||
     p.patientId?.includes(searchTerm)
   );
 
@@ -133,8 +133,8 @@ export default function CreateReport() {
           ) : (
             <div className="mb-6 space-y-2 max-h-60 overflow-y-auto pr-2">
               {filteredPatients.map(p => (
-                <div 
-                  key={p.id} 
+                <div
+                  key={p.id}
                   onClick={() => setSelectedPatient(p)}
                   className={`p-3 border rounded-lg cursor-pointer ${selectedPatient?.id === p.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-gray-50'}`}
                 >
@@ -172,8 +172,8 @@ export default function CreateReport() {
           ) : (
             <div className="mb-6 space-y-2 max-h-60 overflow-y-auto pr-2">
               {tests.map(t => (
-                <div 
-                  key={t.id} 
+                <div
+                  key={t.id}
                   onClick={() => setSelectedTest(t)}
                   className={`p-3 border rounded-lg cursor-pointer ${selectedTest?.id === t.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-gray-50'}`}
                 >
