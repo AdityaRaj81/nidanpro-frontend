@@ -10,8 +10,7 @@ import {
   Search,
   Bell,
   LogOut,
-  Shield,
-  ChevronDown
+  User
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import DesktopOnlyNotice from './DesktopOnlyNotice';
@@ -22,7 +21,9 @@ export default function StaffLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+
+  const notifications = [];
 
   useEffect(() => {
     if (!isStaffAuthenticated) {
@@ -37,6 +38,17 @@ export default function StaffLayout() {
   }, []);
 
   const handleLogout = () => {
+    const firstConfirm = window.confirm('Are you sure you want to logout?');
+    if (!firstConfirm) {
+      return;
+    }
+
+    const secondStep = window.prompt('Type LOGOUT to confirm logout.');
+    if (secondStep !== 'LOGOUT') {
+      window.alert('Logout cancelled.');
+      return;
+    }
+
     setStaffAuth(null);
     navigate('/staff/login');
   };
@@ -74,12 +86,12 @@ export default function StaffLayout() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <div className="w-64 bg-gradient-to-b from-card to-blue-50 border-r border-gray-200 flex flex-col fixed left-0 top-0 bottom-0 shadow-lg">
+      <div className="w-64 bg-card border-r border-gray-200 flex flex-col fixed left-0 top-0 bottom-0 shadow-lg">
         {/* Logo Section */}
-        <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-primary to-blue-600 bg-opacity-10">
+        <div className="p-6 border-b border-gray-200 bg-card">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-              <img src="/logo_NidanPro.png" alt="NidanPro Logo" className="w-8 h-8 rounded-lg" />
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center border border-gray-200 bg-white shadow-sm">
+              <img src="/logo_NidanPro.png" alt="NidanPro Logo" className="w-9 h-9 rounded-lg" />
             </div>
             <div className="flex-1">
               <h2 className="font-bold text-text-primary"><NidanProBrand className="text-sm" variant="text-only" /></h2>
@@ -120,12 +132,16 @@ export default function StaffLayout() {
         </nav>
 
         {/* User Info Section */}
-        <div className="p-4 border-t border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+        <div className="p-4 border-t border-gray-200 bg-card">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-sm font-bold">{staffAuth?.name?.charAt(0)}</span>
-              </div>
+              <button
+                onClick={() => navigate('/staff/profile')}
+                className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center flex-shrink-0 text-lg hover:bg-gray-50 transition-colors"
+                title="Open profile"
+              >
+                👤
+              </button>
               <div className="min-w-0">
                 <p className="font-semibold text-text-primary text-sm truncate">{staffAuth?.name}</p>
                 <p className="text-xs text-text-secondary capitalize font-medium">{staffAuth?.role}</p>
@@ -161,37 +177,47 @@ export default function StaffLayout() {
 
             {/* Right side */}
             <div className="flex items-center space-x-4 ml-4">
-              <button className="p-2.5 text-text-secondary hover:text-primary hover:bg-blue-50 rounded-lg transition-all transform hover:scale-110">
-                <Bell className="w-5 h-5" />
-              </button>
               <div className="relative">
                 <button
-                  onClick={() => setProfileOpen((prev) => !prev)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all"
+                  onClick={() => setNotificationOpen((prev) => !prev)}
+                  className="p-2.5 text-text-secondary hover:text-primary hover:bg-blue-50 rounded-lg transition-all transform hover:scale-110"
+                  title="Notifications"
                 >
-                  <div className="w-9 h-9 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center shadow-md">
-                    <span className="text-white text-sm font-bold">
-                      {staffAuth?.name?.charAt(0)}
-                    </span>
-                  </div>
-                  <ChevronDown className={`w-4 h-4 text-text-secondary transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+                  <Bell className="w-5 h-5" />
                 </button>
-                {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl p-2 z-50">
-                    <div className="px-4 py-3 border-b border-gray-200 mb-2 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50">
-                      <p className="font-semibold text-text-primary">{staffAuth?.name}</p>
-                      <p className="text-xs text-text-secondary capitalize font-medium mt-1">{staffAuth?.role}</p>
-                    </div>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center px-4 py-2.5 text-sm rounded-lg text-red-600 hover:bg-red-50 font-medium transition-all"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
-                    </button>
+                {notificationOpen && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-xl p-3 z-50">
+                    <p className="text-sm font-semibold text-text-primary border-b border-gray-100 pb-2">Notifications</p>
+                    {notifications.length === 0 ? (
+                      <p className="text-sm text-text-secondary py-4">No new notifications right now.</p>
+                    ) : (
+                      <div className="space-y-2 py-2">
+                        {notifications.map((item) => (
+                          <div key={item.id} className="text-sm text-text-primary bg-gray-50 rounded-lg p-2">
+                            {item.message}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
+
+              <button
+                onClick={() => navigate('/staff/profile')}
+                className="w-10 h-10 rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition-colors text-lg flex items-center justify-center"
+                title="Go to profile"
+              >
+                😊
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="p-2.5 text-text-secondary hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                title="Logout"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </header>

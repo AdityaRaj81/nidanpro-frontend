@@ -2,8 +2,10 @@ import { FileText, Clock, CheckCircle, Users, TrendingUp, Activity } from 'lucid
 import { useState, useEffect } from 'react';
 import api from '../../api/axiosConfig';
 import Loader from '../common/Loader';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Dashboard() {
+  const { staffAuth } = useAuth();
   const [reports, setReports] = useState([]);
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +71,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
+        <p className="text-lg font-semibold text-text-primary">Welcome {staffAuth?.name || 'Staff'}!</p>
         <h1 className="text-h1 font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">Dashboard</h1>
         <p className="text-text-secondary">Overview of lab reports and patients.</p>
       </div>
@@ -82,7 +85,7 @@ export default function Dashboard() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <p className="text-text-secondary text-sm font-medium uppercase tracking-wide">{stat.title}</p>
-                  <p className="mt-3 text-4xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent">
+                  <p className={`mt-3 text-4xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}>
                     {stat.value}
                   </p>
                 </div>
@@ -160,10 +163,10 @@ export default function Dashboard() {
                       <p className="text-sm text-text-secondary">{report.patientName}</p>
                     </div>
                     <span className={`text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap ${report.status === 'VERIFIED'
-                        ? 'bg-green-100 text-green-700'
-                        : report.status === 'COMPLETED'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-yellow-100 text-yellow-700'
+                      ? 'bg-green-100 text-green-700'
+                      : report.status === 'COMPLETED'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-yellow-100 text-yellow-700'
                       }`}>
                       {report.status}
                     </span>

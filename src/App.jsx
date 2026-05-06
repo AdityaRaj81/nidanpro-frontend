@@ -20,6 +20,7 @@ import TestManagement from './components/staff/TestManagement';
 import TestParameters from './components/staff/TestParameters';
 import StaffManagement from './components/staff/StaffManagement';
 import Settings from './components/staff/Settings';
+import Profile from './components/staff/Profile';
 import StaffLogin from './components/staff/StaffLogin';
 import LandingPage from './components/public/LandingPage';
 import NotFound from './components/public/NotFound';
@@ -90,6 +91,7 @@ function App() {
               <Route path="tests/:id/parameters" element={<TestParameters />} />
               <Route path="staff-management" element={<StaffManagement />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="profile" element={<Profile />} />
             </Route>
 
             {/* Public Landing */}
