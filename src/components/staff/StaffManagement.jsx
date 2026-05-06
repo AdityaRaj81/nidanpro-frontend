@@ -18,7 +18,6 @@ export default function StaffManagement() {
   const { staffAuth } = useAuth();
 
   const roles = [
-    { value: 'admin', label: 'Admin', description: 'Full system access', color: 'from-purple-500 to-purple-600' },
     { value: 'pathologist', label: 'Pathologist', description: 'Report verification', color: 'from-blue-500 to-blue-600' },
     { value: 'technician', label: 'Technician', description: 'Data entry', color: 'from-green-500 to-green-600' },
     { value: 'sample_collector', label: 'Sample Collector', description: 'Patient registration', color: 'from-orange-500 to-orange-600' }
@@ -76,7 +75,7 @@ export default function StaffManagement() {
     return config || { label: role, description: '', color: 'from-gray-500 to-gray-600' };
   };
 
-  const isAdmin = staffAuth?.role?.toUpperCase() === 'ADMIN' || staffAuth?.role?.toUpperCase() === 'SUPER_ADMIN';
+  const isAdmin = staffAuth?.role?.toUpperCase() === 'ADMIN';
   if (!isAdmin) {
     return (
       <div className="card p-12 text-center space-y-4">
@@ -87,7 +86,7 @@ export default function StaffManagement() {
         </div>
         <div>
           <h2 className="text-2xl font-bold text-text-primary">Access Restricted</h2>
-          <p className="text-text-secondary mt-2">Only admins can manage staff accounts and roles.</p>
+          <p className="text-text-secondary mt-2">Only the lab owner can manage staff accounts and roles.</p>
         </div>
       </div>
     );
@@ -98,8 +97,8 @@ export default function StaffManagement() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-h1 font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">Staff Management</h1>
-          <p className="text-text-secondary">Manage staff members and their roles</p>
+          <h1 className="text-h1 font-bold text-text-primary">Lab Team Management</h1>
+          <p className="text-text-secondary">Manage staff members and their roles inside your lab</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}

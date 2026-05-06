@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function TestManagement() {
   const { staffAuth } = useAuth();
   const role = staffAuth?.role?.toUpperCase();
-  const isSuperAdmin = role === 'SUPER_ADMIN';
+  const isLabAdmin = role === 'ADMIN';
 
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -228,7 +228,7 @@ export default function TestManagement() {
     return param.referenceRange || 'Custom';
   };
 
-  if (!isSuperAdmin) {
+  if (!isLabAdmin) {
     return (
       <div className="space-y-6">
         <div>
@@ -240,7 +240,7 @@ export default function TestManagement() {
             <ShieldAlert className="w-8 h-8 text-red-600" />
           </div>
           <h2 className="text-xl font-bold text-text-primary">Restricted Area</h2>
-          <p className="text-text-secondary mt-2">Only Super Admin can access the test management section.</p>
+          <p className="text-text-secondary mt-2">Only the lab owner can access the test management section.</p>
         </div>
       </div>
     );

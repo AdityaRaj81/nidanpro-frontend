@@ -49,9 +49,13 @@ export default function StaffLogin() {
         email: data.email,
         name: data.name,
         role: data.role,
+        labId: data.labId,
+        labName: data.labName,
+        branchId: data.branchId,
+        branchName: data.branchName,
         token: data.token
       });
-      navigate('/staff/dashboard');
+      navigate(data.role?.toUpperCase() === 'SUPER_ADMIN' ? '/super-admin/dashboard' : data.role?.toUpperCase() === 'ADMIN' ? '/lab-admin/dashboard' : '/staff/dashboard');
     } catch (err) {
       console.error('Login error:', err);
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
@@ -75,7 +79,7 @@ export default function StaffLogin() {
           <Link to="/" className="inline-block text-h1 font-bold text-text-primary mb-2 hover:text-opacity-80 transition-colors">
             <NidanProBrand className="text-h1" variant="text-only" />
           </Link>
-          <p className="text-text-secondary">{isAdminLogin ? 'Super Admin Secure Login' : 'Staff Dashboard Login'}</p>
+          <p className="text-text-secondary">{isAdminLogin ? 'Lab Admin / Super Admin Login' : 'Staff Dashboard Login'}</p>
         </div>
 
         {/* Login Form */}

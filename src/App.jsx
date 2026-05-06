@@ -22,6 +22,9 @@ import StaffManagement from './components/staff/StaffManagement';
 import Settings from './components/staff/Settings';
 import Profile from './components/staff/Profile';
 import StaffLogin from './components/staff/StaffLogin';
+import LabAdminLayout from './components/lab-admin/LabAdminLayout';
+import LabAdminDashboard from './components/lab-admin/LabAdminDashboard';
+import SuperAdminDashboard from './components/super-admin/SuperAdminDashboard';
 import LandingPage from './components/public/LandingPage';
 import NotFound from './components/public/NotFound';
 
@@ -79,6 +82,21 @@ function App() {
             {/* Staff Routes - Desktop Only */}
             <Route path="/login" element={<Navigate to="/staff/login" replace />} />
             <Route path="/staff/login" element={<StaffLogin />} />
+            <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
+            <Route path="/lab-admin" element={<LabAdminLayout />}>
+              <Route index element={<Navigate to="/lab-admin/dashboard" replace />} />
+              <Route path="dashboard" element={<LabAdminDashboard />} />
+              <Route path="patients" element={<Patients />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="reports/create" element={<CreateReport />} />
+              <Route path="reports/entry/:id" element={<ReportEntry />} />
+              <Route path="reports/verify/:id" element={<Verification />} />
+              <Route path="tests" element={<TestManagement />} />
+              <Route path="tests/:id/parameters" element={<TestParameters />} />
+              <Route path="staff-management" element={<StaffManagement />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="profile" element={<Profile />} />
+            </Route>
             <Route path="/staff" element={<StaffLayout />}>
               <Route index element={<Navigate to="/staff/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
