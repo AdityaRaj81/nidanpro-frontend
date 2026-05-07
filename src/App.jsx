@@ -22,9 +22,20 @@ import StaffManagement from './components/staff/StaffManagement';
 import Settings from './components/staff/Settings';
 import Profile from './components/staff/Profile';
 import StaffLogin from './components/staff/StaffLogin';
+
+// Auth Components
+import SuperAdminLogin from './components/auth/SuperAdminLogin';
+import AdminLogin from './components/auth/AdminLogin';
+
+// Lab Admin Components
 import LabAdminLayout from './components/lab-admin/LabAdminLayout';
 import LabAdminDashboard from './components/lab-admin/LabAdminDashboard';
+
+// Super Admin Components
+import SuperAdminLayout from './components/super-admin/SuperAdminLayout';
 import SuperAdminDashboard from './components/super-admin/SuperAdminDashboard';
+
+// Public Components
 import LandingPage from './components/public/LandingPage';
 import NotFound from './components/public/NotFound';
 
@@ -79,10 +90,19 @@ function App() {
             <Route path="/patient/reports" element={<PatientReports />} />
             <Route path="/report/:id" element={<ReportView />} />
 
+            {/* Auth Routes */}
+            <Route path="/auth/super-admin-login" element={<SuperAdminLogin />} />
+            <Route path="/auth/admin-login" element={<AdminLogin />} />
+
             {/* Staff Routes - Desktop Only */}
             <Route path="/login" element={<Navigate to="/staff/login" replace />} />
             <Route path="/staff/login" element={<StaffLogin />} />
-            <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
+
+            {/* Super Admin Routes */}
+            <Route path="/super-admin" element={<SuperAdminLayout><SuperAdminDashboard /></SuperAdminLayout>} />
+            <Route path="/super-admin/dashboard" element={<SuperAdminLayout><SuperAdminDashboard /></SuperAdminLayout>} />
+
+            {/* Lab Admin Routes */}
             <Route path="/lab-admin" element={<LabAdminLayout />}>
               <Route index element={<Navigate to="/lab-admin/dashboard" replace />} />
               <Route path="dashboard" element={<LabAdminDashboard />} />
@@ -97,6 +117,8 @@ function App() {
               <Route path="settings" element={<Settings />} />
               <Route path="profile" element={<Profile />} />
             </Route>
+
+            {/* Staff Routes */}
             <Route path="/staff" element={<StaffLayout />}>
               <Route index element={<Navigate to="/staff/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
