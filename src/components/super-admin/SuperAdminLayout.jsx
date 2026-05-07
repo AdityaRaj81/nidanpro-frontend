@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Menu, X, LogOut, BarChart3, Building2, Settings, Bell } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import NidanProBrand from '../common/NidanProBrand';
@@ -42,19 +42,19 @@ export default function SuperAdminLayout({ children }) {
           <NavItem
             icon={<BarChart3 className="w-5 h-5" />}
             label="Dashboard"
-            href="/super-admin/dashboard"
+            to="/super-admin/dashboard"
             sidebarOpen={sidebarOpen}
           />
           <NavItem
             icon={<Building2 className="w-5 h-5" />}
             label="Labs Management"
-            href="/super-admin/labs"
+            to="/super-admin/labs"
             sidebarOpen={sidebarOpen}
           />
           <NavItem
             icon={<Settings className="w-5 h-5" />}
             label="System Settings"
-            href="/super-admin/settings"
+            to="/super-admin/settings"
             sidebarOpen={sidebarOpen}
           />
         </nav>
@@ -98,27 +98,23 @@ export default function SuperAdminLayout({ children }) {
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto p-8">
-          {children}
+          {children ?? <Outlet />}
         </div>
       </div>
     </div>
   );
 }
 
-function NavItem({ icon, label, href, sidebarOpen }) {
-  const navigate = useNavigate();
-  const isActive = window.location.pathname === href;
+function NavItem({ icon, label, to, sidebarOpen }) {
+  const baseClass = 'w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors';
 
   return (
-    <button
-      onClick={() => navigate(href)}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-          ? 'bg-blue-700 text-white'
-          : 'text-blue-100 hover:bg-blue-700/50'
-        }`}
+    <NavLink
+      to={to}
+      className={({ isActive }) => `${baseClass} ${isActive ? 'bg-blue-700 text-white' : 'text-blue-100 hover:bg-blue-700/50'}`}
     >
       {icon}
       {sidebarOpen && label}
-    </button>
+    </NavLink>
   );
 }

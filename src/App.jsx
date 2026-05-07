@@ -34,6 +34,15 @@ import LabAdminDashboard from './components/lab-admin/LabAdminDashboard';
 // Super Admin Components
 import SuperAdminLayout from './components/super-admin/SuperAdminLayout';
 import SuperAdminDashboard from './components/super-admin/SuperAdminDashboard';
+import SuperAdminGuard from './components/super-admin/SuperAdminGuard';
+import SuperAdminLabsPage from './components/super-admin/SuperAdminLabsPage';
+import SuperAdminLabFormPage from './components/super-admin/SuperAdminLabFormPage';
+import SuperAdminDeleteLabPage from './components/super-admin/SuperAdminDeleteLabPage';
+import SuperAdminPaymentsPage from './components/super-admin/SuperAdminPaymentsPage';
+import SuperAdminSettingsPage from './components/super-admin/SuperAdminSettingsPage';
+import SuperAdminBranchesPage from './components/super-admin/SuperAdminBranchesPage';
+import SuperAdminBranchFormPage from './components/super-admin/SuperAdminBranchFormPage';
+import SuperAdminDeleteBranchPage from './components/super-admin/SuperAdminDeleteBranchPage';
 
 // Public Components
 import LandingPage from './components/public/LandingPage';
@@ -99,8 +108,27 @@ function App() {
             <Route path="/staff/login" element={<StaffLogin />} />
 
             {/* Super Admin Routes */}
-            <Route path="/super-admin" element={<SuperAdminLayout><SuperAdminDashboard /></SuperAdminLayout>} />
-            <Route path="/super-admin/dashboard" element={<SuperAdminLayout><SuperAdminDashboard /></SuperAdminLayout>} />
+            <Route
+              path="/super-admin"
+              element={(
+                <SuperAdminGuard>
+                  <SuperAdminLayout />
+                </SuperAdminGuard>
+              )}
+            >
+              <Route index element={<Navigate to="/super-admin/dashboard" replace />} />
+              <Route path="dashboard" element={<SuperAdminDashboard />} />
+              <Route path="labs" element={<SuperAdminLabsPage />} />
+              <Route path="labs/new" element={<SuperAdminLabFormPage />} />
+              <Route path="labs/:id/edit" element={<SuperAdminLabFormPage />} />
+              <Route path="labs/:id/delete" element={<SuperAdminDeleteLabPage />} />
+              <Route path="labs/:id/payments" element={<SuperAdminPaymentsPage />} />
+              <Route path="branches" element={<SuperAdminBranchesPage />} />
+              <Route path="branches/new" element={<SuperAdminBranchFormPage />} />
+              <Route path="branches/:id/edit" element={<SuperAdminBranchFormPage />} />
+              <Route path="branches/:id/delete" element={<SuperAdminDeleteBranchPage />} />
+              <Route path="settings" element={<SuperAdminSettingsPage />} />
+            </Route>
 
             {/* Lab Admin Routes */}
             <Route path="/lab-admin" element={<LabAdminLayout />}>

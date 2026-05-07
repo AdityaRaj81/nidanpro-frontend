@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import {
-  Building2, Network, CreditCard, BarChart3, Plus, RefreshCw,
-  Edit, Trash2, Eye, Search, AlertCircle, CheckCircle2, Clock,
-  TrendingUp, Users, DollarSign
+  Building2, Network, Plus, RefreshCw,
+  Edit, Trash2, Search, AlertCircle, CheckCircle2,
+  TrendingUp, Users, BarChart3
 } from 'lucide-react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import api from '../../api/axiosConfig';
 import Loader from '../common/Loader';
 import InlineLoader from '../common/InlineLoader';
@@ -38,6 +38,7 @@ const initialBranchForm = {
 
 export default function SuperAdminDashboard() {
   const { staffAuth } = useAuth();
+  const navigate = useNavigate();
   const role = staffAuth?.role?.toUpperCase();
 
   const [loading, setLoading] = useState(true);
@@ -72,7 +73,7 @@ export default function SuperAdminDashboard() {
       }
     } catch (err) {
       console.error('Failed to load super admin dashboard', err);
-      setError(err.response?.data?.message || 'Failed to load super admin data');
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to load super admin data');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -115,7 +116,7 @@ export default function SuperAdminDashboard() {
       setTimeout(() => setSuccess(''), 3000);
       await loadData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save lab');
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to save lab');
     } finally {
       setSavingLab(false);
     }
@@ -129,7 +130,7 @@ export default function SuperAdminDashboard() {
         setTimeout(() => setSuccess(''), 3000);
         await loadData();
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to delete lab');
+        setError(err.response?.data?.message || err.response?.data?.error || 'Failed to delete lab');
       }
     }
   };
@@ -147,7 +148,7 @@ export default function SuperAdminDashboard() {
       setTimeout(() => setSuccess(''), 3000);
       await loadData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add branch');
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to add branch');
     } finally {
       setSavingBranch(false);
     }
@@ -171,8 +172,8 @@ export default function SuperAdminDashboard() {
     return <Loader message="Loading Super Admin Dashboard..." />;
   }
 
-  return (
-    <div className="space-y-6">
+  const dashboardContent = (
+    <div className="space-y-8">
       {/* Header Section */}
       <div className="flex items-start justify-between gap-4 mb-8">
         <div>
@@ -243,8 +244,8 @@ export default function SuperAdminDashboard() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-3 font-medium transition-colors ${activeTab === tab.id
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-text-secondary hover:text-text-primary'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-text-secondary hover:text-text-primary'
               }`}
           >
             {tab.label}
@@ -285,18 +286,20 @@ export default function SuperAdminDashboard() {
             <div className="space-y-3">
               <button
                 onClick={() => {
-                  setShowLabForm(true);
-                  setEditingLabId(null);
-                  setLabForm(initialLabForm);
+                  navigate('/super-admin/labs/new');
                 }}
                 className="w-full flex items-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Add New Lab
               </button>
-              <button className="w-full flex items-center gap-2 px-4 py-3 border border-border hover:bg-gray-50 text-text-primary rounded-lg font-medium transition-colors">
+              <button
+                type="button"
+                onClick={() => navigate('/super-admin/settings')}
+                className="w-full flex items-center gap-2 px-4 py-3 border border-border hover:bg-gray-50 text-text-primary rounded-lg font-medium transition-colors"
+              >
                 <BarChart3 className="w-4 h-4" />
-                View Analytics
+                Platform Settings
               </button>
             </div>
           </div>
@@ -590,8 +593,8 @@ export default function SuperAdminDashboard() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${lab.paymentStatus === 'PAID' ? 'bg-green-50 text-green-700' :
-                            lab.paymentStatus === 'PENDING' ? 'bg-orange-50 text-orange-700' :
-                              'bg-red-50 text-red-700'
+                          lab.paymentStatus === 'PENDING' ? 'bg-orange-50 text-orange-700' :
+                            'bg-red-50 text-red-700'
                           }`}>
                           {lab.paymentStatus}
                         </span>
@@ -747,4 +750,6 @@ export default function SuperAdminDashboard() {
       )}
     </div>
   );
+
+  return dashboardContent;
 }
